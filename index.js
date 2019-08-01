@@ -36,6 +36,7 @@ const ENUM_TOKENS = {
     COMMAND_SCANF: 'COMMAND_SCANF',
     COMMAND_PRINT: 'COMMAND_PRINT',
     COMMAND_INCLUDE: 'COMMAND_INCLUDE',
+    COMMAND_RETURN: 'COMMAND_RETURN',
 
     IDENTIFIER_MAIN: 'IDENTIFIER_MAIN',
     IDENTIFIER_VARIABLES: 'IDENTIFIER_VARIABLES',
@@ -81,7 +82,6 @@ lexer.setIgnoreCase(true);  // SET IGNORE CASE
 // OVERIDE THE DEFAULT ERROR ACTION
 lexer.echo = function () {
     let i = getInterval(this.index);
-    console.log(this.text);
     errors.push({ error: "ENTRY DOES NOT MATCH", value: this.text, line: i.line, column: i.column });
 }
 
@@ -89,10 +89,10 @@ lexer.echo = function () {
 //ADD DEFINITION WITH REGULAR EXPRESSIONS
 
 //INSTANCES OF TYPES
-lexer.addDefinition('INSTANCE_OF_INT', /\b(\d+)\b/);
-lexer.addDefinition('INSTANCE_OF_FLOAT', /\b(\d+)\.(\d+)\b/);
+lexer.addDefinition('INSTANCE_OF_INT', /[0-9]+/);
+lexer.addDefinition('INSTANCE_OF_FLOAT', /\b((\d+)\.(\d+))|(\d+)E-(\d+)\b/);
 lexer.addDefinition('INSTANCE_OF_BOOL', /\btrue\b|\bfalse\b/);
-lexer.addDefinition('INSTANCE_OF_CHAR_SIMPLE', /'(.){1}'|\'|''|'(\\n)'|'(')'|'(\\t)'|'(\\f)'|'(\\b)'|'(\\r)'|'(\\")'|\\/);
+lexer.addDefinition('INSTANCE_OF_CHAR_SIMPLE', /'.{1}'/);
 lexer.addDefinition('INSTANCE_OF_CHAR_MULTPLE', /"([^"\\\n]|\\.|\\\n)*["]/);
 
 //TYPES
@@ -110,6 +110,7 @@ lexer.addDefinition('COMMAND_DO', /\bdo\b/);
 lexer.addDefinition('COMMAND_BREAK', /\bbreak\b/);
 lexer.addDefinition('COMMAND_CONTINUE', /\bcontinue\b/);
 lexer.addDefinition('COMMAND_INCLUDE', /\binclude\b/);
+lexer.addDefinition('COMMAND_RETURN', /\breturn\b/);
 
 //OPERATORS
 lexer.addDefinition('OPERATOR_ARITHMETIC_PLUS', /\+/);
@@ -140,7 +141,7 @@ lexer.addDefinition('DELIMITER_COMMA', /,/);
 
 //IDENTIFIER
 lexer.addDefinition('IDENTIFIER_MAIN', /\bmain\b/);
-lexer.addDefinition('IDENTIFIER_VARIABLES', /[_a-zA-Z][_a-zA-Z0-9]{0,30}/);
+lexer.addDefinition('IDENTIFIER_VARIABLES', /[_a-zA-Z]([_a-zA-Z0-9])*/);
 lexer.addDefinition('IDENTIFIER_POINTER_VARIABLE', /[*][_a-zA-Z][_a-zA-Z0-9]{0,30}/);
 lexer.addDefinition('IDENTIFIER_POINTER_ADDRESS', /[&][_a-zA-Z][_a-zA-Z0-9]{0,30}/);
 
@@ -151,6 +152,7 @@ lexer.addDefinition('COMMENT_MULTIPLE', /\/\*.*\*\//)
 //INCLUDE - DISABLED
 lexer.addDefinition('INCLUDE_CONTENT', /<\w+.h>/)
 
+lexer.addDefinition('MULTIPLES_IN_CHAR', /'.{2,}'/)
 
 //ADD RULES
 
@@ -167,12 +169,22 @@ lexer.addRule(/{INSTANCE_OF_BOOL}/, function (lexer) {
     let i = getInterval(lexer.index);
     tokens.push({ token: ENUM_TOKENS.INSTANCE_OF_BOOL, value: lexer.text, line: i.line, column: i.column });
 });
-/*
-lexer.addRule(/'/, function (lexer) {
+
+lexer.addRule(/{MULTIPLES_IN_CHAR}/, function (lexer) {
     let i = getInterval(lexer.index);
-    s = clearString(lexer.text);
-    errors.push({ error: "MULTIPLE CHARACTERS IN A CAR", value: s, line: i.line, column: i.column });
-})*/
+    verifyAgain(lexer.text, i);
+
+});
+function verifyAgain(str, i) {
+    str = clearString(str);
+
+    if (str == '\n' || str == '\"' || str == '\r' || str == '\t' || str == '\f' || str == '\'' || str == '\"' || str == '\b') {
+        tokens.push({ token: ENUM_TOKENS.INSTANCE_OF_CHAR_SIMPLE, value: str, line: i.line, column: i.column });
+    } else {
+        errors.push({ error: "MULTIPLE CHARACTERS IN A CHAR", value: str, line: i.line, column: i.column });
+    }
+}
+
 lexer.addRule(/{INSTANCE_OF_CHAR_SIMPLE}/, function (lexer) {
     let i = getInterval(lexer.index);
     s = clearString(lexer.text);
@@ -235,6 +247,10 @@ lexer.addRule(/{COMMAND_CONTINUE}/, function (lexer) {
 lexer.addRule(/{COMMAND_INCLUDE}/, function (lexer) {
     let i = getInterval(lexer.index);
     // tokens.push({ token: ENUM_TOKENS.COMMAND_INCLUDE, value: lexer.text, line: i.line, column: i.column });
+});
+lexer.addRule(/{COMMAND_RETURN}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.COMMAND_RETURN, value: lexer.text, line: i.line, column: i.column });
 });
 
 
@@ -393,6 +409,8 @@ if (str) {
         makeIterval(data.split('\n'));
         console.log(code);
         lexer.setSource(data);
+
+
         lexer.lex();
         console.table(tokens);
         console.table(errors);
