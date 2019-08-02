@@ -31,6 +31,23 @@ int main(void)
   printf ("Endereço da variavel valor: %x \n", &valor);
   printf ("Conteudo da variavel ponteiro ptr: %x", ptr);
  
+ if(a || b){
+
+  }else if(a && b){
+
+}
+
+/* Comentario
+com 
+/*varias 
+linhas
+*/
+ 
+asdasd
+
+/* uma linha*/
+
+
 ^~
   getch();
   return(0);
