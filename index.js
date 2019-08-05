@@ -15,9 +15,9 @@ var intervals = [];
 
 const ENUM_TOKENS = {
 
-    INSTANCE_OF_INT: 'INT',
-    INSTANCE_OF_FLOAT: 'FLOAT',
-    INSTANCE_OF_BOOL: 'BOOL',
+    INSTANCE_OF_INT: 'INSTANCE_OF_INT',
+    INSTANCE_OF_FLOAT: 'INSTANCE_OF_FLOAT',
+    INSTANCE_OF_BOOL: 'INSTANCE_OF_BOOL',
     INSTANCE_OF_CHAR_SIMPLE: 'INSTANCE_OF_CHAR_SIMPLE',
     INSTANCE_OF_CHAR_MULTPLE: 'INSTANCE_OF_CHAR_MULTPLE',
 
@@ -34,7 +34,7 @@ const ENUM_TOKENS = {
     COMMAND_BREAK: 'COMMAND_BREAK',
     COMMAND_CONTINUE: 'COMMAND_CONTINUE',
     COMMAND_SCANF: 'COMMAND_SCANF',
-    COMMAND_PRINT: 'COMMAND_PRINT',
+    COMMAND_PRINTF: 'COMMAND_PRINTF',
     COMMAND_INCLUDE: 'COMMAND_INCLUDE',
     COMMAND_RETURN: 'COMMAND_RETURN',
     COMMAND_ELSE:'COMMAND_ELSE',
@@ -70,7 +70,8 @@ const ENUM_TOKENS = {
     DELIMITER_END_LINE: 'DELIMITER_END_LINE',
     DELIMITER_HASHTAG: 'DELIMITER_HASHTAG',
     DELIMITER_COMMA: 'DELIMITER_COMMA',
-
+    DELIMITER_DOT:'DELIMITER_DOT',
+    DELIMITER_DOT_COMMA:'DELIMITER_DOT_COMMA',
     COMMENT_SIMPLE: 'COMMENT_SIMPLE',
     COMMENT_MULTIPLE: 'COMMENT_MULTIPLE',
 
@@ -117,6 +118,8 @@ lexer.addDefinition('COMMAND_CONTINUE', /\bcontinue\b/);
 lexer.addDefinition('COMMAND_INCLUDE', /\binclude\b/);
 lexer.addDefinition('COMMAND_RETURN', /\breturn\b/);
 lexer.addDefinition('COMMAND_ELSE', /\belse\b/);
+lexer.addDefinition('COMMAND_SCANF', /\scanf\b/);
+lexer.addDefinition('COMMAND_PRINTF', /\bprintf\b/);
 
 
 //OPERATORS
@@ -146,9 +149,11 @@ lexer.addDefinition('DELIMITER_BLOCK_LEFT_PARENTHESES', /\(/);
 lexer.addDefinition('DELIMITER_BLOCK_RIGHT_BRACKET', /\]/);
 lexer.addDefinition('DELIMITER_BLOCK_RIGHT_BRACE', /\}/);
 lexer.addDefinition('DELIMITER_BLOCK_RIGHT_PARENTHESES', /\)/);
-lexer.addDefinition('DELIMITER_END_LINE', /;/);
 lexer.addDefinition('DELIMITER_HASHTAG', /#/);
 lexer.addDefinition('DELIMITER_COMMA', /,/);
+lexer.addDefinition('DELIMITER_DOT', /\./);
+lexer.addDefinition('DELIMITER_DOT_COMMA', /;/);
+
 
 //IDENTIFIER
 lexer.addDefinition('IDENTIFIER_MAIN', /\bmain\b/);
@@ -270,6 +275,15 @@ lexer.addRule(/{COMMAND_RETURN}/, function (lexer) {
     tokens.push({ token: ENUM_TOKENS.COMMAND_RETURN, value: lexer.text, line: i.line, column: i.column });
 });
 
+lexer.addRule(/{COMMAND_PRINTF}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.COMMAND_PRINTF, value: lexer.text, line: i.line, column: i.column });
+});
+lexer.addRule(/{COMMAND_SCANF}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.COMMAND_SCANF, value: lexer.text, line: i.line, column: i.column });
+});
+
 
 //RULES FOR OPERATORS
 lexer.addRule(/{OPERATOR_ARITHMETIC_PLUS}/, function (lexer) {
@@ -363,10 +377,6 @@ lexer.addRule(/{DELIMITER_BLOCK_RIGHT_PARENTHESES}/, function (lexer) {
     let i = getInterval(lexer.index);
     tokens.push({ token: ENUM_TOKENS.DELIMITER_BLOCK_RIGHT_PARENTHESES, value: lexer.text, line: i.line, column: i.column });
 });
-lexer.addRule(/{DELIMITER_END_LINE}/, function (lexer) {
-    let i = getInterval(lexer.index);
-    tokens.push({ token: ENUM_TOKENS.DELIMITER_END_LINE, value: lexer.text, line: i.line, column: i.column });
-});
 lexer.addRule(/{DELIMITER_COMMA}/, function (lexer) {
     let i = getInterval(lexer.index);
     tokens.push({ token: ENUM_TOKENS.DELIMITER_COMMA, value: lexer.text, line: i.line, column: i.column });
@@ -375,6 +385,16 @@ lexer.addRule(/{DELIMITER_HASHTAG}/, function (lexer) {
     let i = getInterval(lexer.index);
     //tokens.push({ token: ENUM_TOKENS.DELIMITER_HASHTAG, value: lexer.text, line: i.line, column: i.column });
 });
+lexer.addRule(/{DELIMITER_DOT}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.DELIMITER_DOT, value: lexer.text, line: i.line, column: i.column });
+});
+
+lexer.addRule(/{DELIMITER_DOT_COMMA}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.DELIMITER_DOT_COMMA, value: lexer.text, line: i.line, column: i.column });
+});
+
 
 
 //RULES FOR IDENTIFIER
@@ -432,8 +452,18 @@ if (str) {
         lexer.lex();
         console.table(tokens);
         console.table(errors);
-
+        generateStringParser(tokens);
     });
+}
+
+function generateStringParser(token){
+    str = '';
+    for(let t of token){
+        str+=t.token;
+    }
+    console.log(str);
+    return str;
+  
 }
 
 function makeIterval(arr) {
