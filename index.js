@@ -58,6 +58,8 @@ const ENUM_TOKENS = {
     OPERATOR_COMPARISON_EQUAL: 'OPERATOR_COMPARISON_EQUAL',
     OPERATOR_ATRIBUTION_EQUAL: 'OPERATOR_ATRIBUTION_EQUAL',
     OPERATOR_NEGATION: 'OPERATOR_NEGATION',
+    OPERATOR_LOGICAL_AND:'OPERATOR_LOGICAL_AND',
+    OPERATOR_LOGICAL_OR:'OPERATOR_LOGICAL_OR',
     OPERATOR_UNARY_PIPE: 'OPERATOR_UNARY_PIPE',
     OPERATOR_UNARY_E: 'OPERATOR_UNARY_E',
 
@@ -118,7 +120,7 @@ lexer.addDefinition('COMMAND_CONTINUE', /\bcontinue\b/);
 lexer.addDefinition('COMMAND_INCLUDE', /\binclude\b/);
 lexer.addDefinition('COMMAND_RETURN', /\breturn\b/);
 lexer.addDefinition('COMMAND_ELSE', /\belse\b/);
-lexer.addDefinition('COMMAND_SCANF', /\scanf\b/);
+lexer.addDefinition('COMMAND_SCANF', /\b\scanf\b/);
 lexer.addDefinition('COMMAND_PRINTF', /\bprintf\b/);
 
 
@@ -137,6 +139,8 @@ lexer.addDefinition('OPERATOR_COMPARISON_DIFFERENT', /!=/);
 lexer.addDefinition('OPERATOR_COMPARISON_EQUAL', /==/);
 lexer.addDefinition('OPERATOR_ATRIBUTION_EQUAL', /=/);
 lexer.addDefinition('OPERATOR_NEGATION', /!/);
+lexer.addDefinition('OPERATOR_LOGICAL_OR', /\|\|/);
+lexer.addDefinition('OPERATOR_LOGICAL_AND', /&&/);
 lexer.addDefinition('OPERATOR_UNARY_PIPE', /\|/);
 lexer.addDefinition('OPERATOR_UNARY_E', /&/);
 
@@ -342,6 +346,14 @@ lexer.addRule(/{OPERATOR_NEGATION}/, function (lexer) {
     let i = getInterval(lexer.index);
     tokens.push({ token: ENUM_TOKENS.OPERATOR_NEGATION, value: lexer.text, line: i.line, column: i.column });
 });
+lexer.addRule(/{OPERATOR_LOGICAL_OR}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.OPERATOR_LOGICAL_OR, value: lexer.text, line: i.line, column: i.column });
+});
+lexer.addRule(/{OPERATOR_LOGICAL_AND}/, function (lexer) {
+    let i = getInterval(lexer.index);
+    tokens.push({ token: ENUM_TOKENS.OPERATOR_LOGICAL_AND, value: lexer.text, line: i.line, column: i.column });
+});
 lexer.addRule(/{OPERATOR_UNARY_PIPE}/, function (lexer) {
     let i = getInterval(lexer.index);
     tokens.push({ token: ENUM_TOKENS.OPERATOR_UNARY_PIPE, value: lexer.text, line: i.line, column: i.column });
@@ -460,6 +472,9 @@ function generateStringParser(token){
     str = '';
     for(let t of token){
         str+=t.token;
+        if(t.token == ENUM_TOKENS.DELIMITER_DOT_COMMA){
+            str += '\n';
+        }
     }
     console.log(str);
     return str;

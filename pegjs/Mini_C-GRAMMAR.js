@@ -1,43 +1,133 @@
+Program_init "Program_init"
+  = Program
 
-Program_init = Statement
+Program "Program"
+  = SourceElements ?
 
-test = Type (Identifier DELIMITER_COMMA)* Identifier DELIMITER_DOT_COMMA
+SourceElements "SourceElements"
+  = SourceElement(EOS SourceElement) *
+
+SourceElement  "SourceElement"
+  = DELIMITER_BLOCK_LEFT_BRACE Statement
+
+EOS "EOS"
+  = DELIMITER_DOT_COMMA
+  / DELIMITER_BLOCK_RIGHT_BRACE
+
+EOF "EOF"
+  = !.
 
 
-InitialRule = Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES CodeComposer
 
-Type
+Statement "Statement"
+  = VariableStatement
+  / ExpressionStatement
+  / IfStatement
+  / IterationStatement
+  / ContinueStatement
+  / BreakStatement
+  / ReturnStatement
+
+
+// DEFINITION OF DECLARATION OF VARIABLES
+
+VariableStatement "VariableStatements"
+  = Type VariableStatementList
+
+VariableStatementList "VariableStatementMultiples"
+  = VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType
+    / VariableStatementAtribuition * VariableStatementSimple * Identifier
+
+VariableStatementAtribuition "VariableStatementAtribuition"
+  = (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA)
+
+VariableStatementSimple "VariableStatementSimple"
+  = (Identifier DELIMITER_COMMA)
+
+// *************************************
+
+// DEFINITION OF EXPRESSIONS
+
+ExpressionStatement "ExpressionStatement" 
+  =(ExpressionUnit LogicalOperators)* ExpressionUnit
+
+LogicalOperators
+  = OPERATOR_LOGICAL_AND
+  / OPERATOR_LOGICAL_OR
+
+ExpressionUnit "ExpressionUnit"
+  = DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES
+
+AssignmentExpression "AssignmentExpression"
+  = IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES
+  / IDENTIFIER_VARIABLES ComparisonOperators InstanceType
+  / InstanceType ComparisonOperators InstanceType
+
+
+ComparisonOperators
+  = OPERATOR_COMPARISON_EQUAL
+  / OPERATOR_COMPARISON_DIFFERENT
+  / OPERATOR_COMPARISON_LESS_EQUAL
+  / OPERATOR_COMPARISON_LESS_THEN
+  / OPERATOR_COMPARISON_MORE_EQUAL
+  / OPERATOR_COMPARISON_MORE_THEN
+
+// *****************************************
+
+
+IfStatement "IfStatement"
+  = COMMAND_IF ExpressionStatement 
+    / COMMAND_IF ExpressionStatement Statement COMMAND_ELSE ExpressionStatement
+
+
+
+
+test "test"
+  = Type(Identifier DELIMITER_COMMA) * Identifier DELIMITER_DOT_COMMA
+
+InitialRule "InitialRule"
+  = Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES CodeComposer
+
+Type "Type"
   = TYPE_INT
   / TYPE_BOOL
   / TYPE_FLOAT
   / TYPE_CHAR
   / TYPE_VOID
 
-InstanceType
+InstanceType "InstanceType"
   = INSTANCE_OF_BOOL
   / INSTANCE_OF_CHAR_MULTPLE
   / INSTANCE_OF_CHAR_SIMPLE
   / INSTANCE_OF_FLOAT
   / INSTANCE_OF_INT
 
-Identifier
+Identifier "Identifier"
   = IDENTIFIER_POINTER_ADDRESS
   / IDENTIFIER_POINTER_VARIABLE
   / IDENTIFIER_VARIABLES
 
-
-ArgumentsList
+ArgumentsList "ArgumentsList"
   = 'ARGS'
-CodeComposer
+
+CodeComposer "CodeComposer"
   = DELIMITER_BLOCK_LEFT_BRACE Statement DELIMITER_BLOCK_RIGHT_BRACE
 
-Statement
-  = DeclareVariables
 
-DeclareVariables 
-	= Type Identifier DELIMITER_DOT_COMMA
-    / Type Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_DOT_COMMA
-    /Type (Identifier DELIMITER_COMMA)* Identifier DELIMITER_DOT_COMMA
+
+ReturnStatement "ReturnStatement"
+  = ''
+ContinueStatement "ContinueStatement"
+  = ''
+IterationStatement "IterationStatement"
+  = ''
+BreakStatement "BreakStatement"
+  = ''
+
+
+
+
+
 
 _ "Optional Whitespace"
   = w: [\t\n\r] * { return[w.join('')] }
@@ -97,6 +187,8 @@ OPERATOR_COMPARISON_DIFFERENT = 'OPERATOR_COMPARISON_DIFFERENT'
 OPERATOR_COMPARISON_EQUAL = 'OPERATOR_COMPARISON_EQUAL'
 OPERATOR_ATRIBUTION_EQUAL = 'OPERATOR_ATRIBUTION_EQUAL'
 OPERATOR_NEGATION = 'OPERATOR_NEGATION'
+OPERATOR_LOGICAL_AND = 'OPERATOR_LOGICAL_AND'
+OPERATOR_LOGICAL_OR = 'OPERATOR_LOGICAL_OR'
 OPERATOR_UNARY_PIPE = 'OPERATOR_UNARY_PIPE'
 OPERATOR_UNARY_E = 'OPERATOR_UNARY_E'
 
