@@ -473,7 +473,7 @@ function generateStringParser(token){
     for(let t of token){
         str+=t.token;
         if(t.token == ENUM_TOKENS.DELIMITER_DOT_COMMA){
-            str += '\n';
+           // str += '\n';
         }
     }
     console.log(str);
