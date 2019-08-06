@@ -1,7 +1,7 @@
-#include <stdio.h>
-main(){
+
+int main(){
   float f;
-  double d;
+  float d;
   
   printf("Digite um float: ");
   scanf("%f",&f);

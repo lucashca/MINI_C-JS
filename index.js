@@ -120,7 +120,7 @@ lexer.addDefinition('COMMAND_CONTINUE', /\bcontinue\b/);
 lexer.addDefinition('COMMAND_INCLUDE', /\binclude\b/);
 lexer.addDefinition('COMMAND_RETURN', /\breturn\b/);
 lexer.addDefinition('COMMAND_ELSE', /\belse\b/);
-lexer.addDefinition('COMMAND_SCANF', /\b\scanf\b/);
+lexer.addDefinition('COMMAND_SCANF', /\bscanf\b/);
 lexer.addDefinition('COMMAND_PRINTF', /\bprintf\b/);
 
 
@@ -128,7 +128,7 @@ lexer.addDefinition('COMMAND_PRINTF', /\bprintf\b/);
 lexer.addDefinition('OPERATOR_ARITHMETIC_PLUS', /\+/);
 lexer.addDefinition('OPERATOR_ARITHMETIC_LESS', /-/);
 lexer.addDefinition('OPERATOR_ARITHMETIC_MULTIPLICATION', /\*/);
-lexer.addDefinition('OPERATOR_ARITHMETIC_DIVISION', /\b\/\b/);
+lexer.addDefinition('OPERATOR_ARITHMETIC_DIVISION', /\//);
 lexer.addDefinition('OPERATOR_ARITHMETIC_DIV', /div/);
 lexer.addDefinition('OPERATOR_ARITHMETIC_MOD', /mod/);
 lexer.addDefinition('OPERATOR_COMPARISON_LESS_THEN', /</);
@@ -436,7 +436,7 @@ lexer.addRule(/{COMMENT_SIMPLE}/, function (lexer) {
 lexer.addRule(/{COMMENT_MULTIPLE}/, function (lexer) {
     let i = getInterval(lexer.index);
     //console.log(lexer.text);
-    tokens.push({ token: ENUM_TOKENS.COMMENT_MULTIPLE, value: lexer.text, line: i.line, column: i.column });
+    //tokens.push({ token: ENUM_TOKENS.COMMENT_MULTIPLE, value: lexer.text, line: i.line, column: i.column });
 });
 
 
