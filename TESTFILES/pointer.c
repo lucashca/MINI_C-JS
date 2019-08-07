@@ -11,7 +11,9 @@ int main()
   char k = 'z';
   char k = 'a';
   char k = '2';
+ if((a = 1)||(a ==b) + 124 + 124512){
 
+ }
 
   printf("Utilizando ponteiros\n\n");
   printf ("Conteudo da variavel valor: %d\n", valor);

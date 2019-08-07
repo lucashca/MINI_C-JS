@@ -1,10 +1,11 @@
 
-Program_init
+Programinit
 = InitialRule
 
 InitialRule
-= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return main2.join(' ') }
-/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main.join(' ')} 
+= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return main2 }
+/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main} 
+/ main:(IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main} 
 
 Program
 = (SourceElement) *
@@ -68,21 +69,21 @@ WhileStatement
 // ************************************************************
 
 DoWhileStatement
-= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL ) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL ) { return ( a) }
 //**************************************************************
 
 //IF STATEMENT
 
 IfStatement
-= c:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) { return ('\n' + c.join(' ')) }
-/ b:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) { return ('\n' + b.join(' ')) }
-/ a:(COMMAND_IF ExpressionStatement CodeComposer) {return("\n"+a.join(' '))}
+= c: (COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) { return ( c) }
+/ b:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) { return ( b) }
+/ a: (COMMAND_IF ExpressionStatement CodeComposer) { return (a) }
 
 //***************************************************************
 
 // FOR STATEMENT
 ForStatement
-= a: (COMMAND_FOR ForExpressionList CodeComposer) { return ('\n' + a.join(' ')) }
+= a: (COMMAND_FOR ForExpressionList CodeComposer) { return ( a) }
 
 ForExpressionList
 = DELIMITER_BLOCK_LEFT_PARENTHESES ForFistTerm ForSecondTerm ForThirdTerm DELIMITER_BLOCK_RIGHT_PARENTHESES
@@ -102,7 +103,7 @@ ForThirdTerm
 // PRINTF STATEMENT
 
 PrintfStatement
-= a: (COMMAND_PRINTF PrintfArgumentList EOL ) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_PRINTF PrintfArgumentList EOL ) { return ( a) }
 
 PrintfArgumentList
 = DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_BLOCK_RIGHT_PARENTHESES
@@ -135,7 +136,7 @@ ContinueStatement
 // SCANF STATEMENT
 
 ScanfStatement
-= a: (COMMAND_SCANF ScanfArgumentList EOL) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_SCANF ScanfArgumentList EOL) { return ( a) }
 
 ScanfArgumentList
 = a: (DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_COMMA Identifier DELIMITER_BLOCK_RIGHT_PARENTHESES)
@@ -147,25 +148,25 @@ ScanfArgumentList
 
 
 VariableStatement
-= varDec: (Type VariableStatementList EOL) { return ("\n" + varDec.join(' ')) }
-/ varAss:(Identifier VariableAtribuition EOL){{return ("\n"+varAss.join(' '))}}
+= varDec: (Type VariableStatementList EOL) { return (varDec) }
+/ varAss:(Identifier VariableAtribuition EOL){{return (varAss)}}
 
 VariableStatementList
-= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2.join(' ')) }
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray){return (varDec.join(' '))} 
-/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2.join(' ')) }
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier){return (varDec.join(' '))} 
+= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2) }
+/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray){return (varDec)} 
+/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2) }
+/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier){return (varDec)} 
 
 VariableStatementAtribuition
-= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a.join(' ')) }
-/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a.join(' ')) }
+= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a) }
+/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a) }
 
 VariableStatementSimple
 = a: (Identifier DELIMITER_COMMA) { return (a.join('')) }
 / a:(Identifier VariableStatementArray DELIMITER_COMMA)
 
 VariableStatementArray
-= a:(DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)
+= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)
 
 
 VariableAtribuition
@@ -179,13 +180,13 @@ VariableAtribuition
 
 
 Equation
-= a: (Term(MoreOrLess Term) *){ return a.join(' ') }
+= a: (Term(MoreOrLess Term) *){ return a }
 
 Term
-= a: (Factor(SomeOperators Factor) *){ return a.join(' ') }
+= a: (Factor(SomeOperators Factor) *){ return a }
 
 Factor
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a.join(' ') }
+= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a }
 / a:Numeric{return a} 
 / a: Identifier{ return a }
 
@@ -215,28 +216,28 @@ Numeric
 
 
 ExpressionEquationStatement
-	= ArithmeticOperators Equation
+= ArithmeticOperators Equation
 // *************************************
 
 // DEFINITION OF EXPRESSIONS
 
 ExpressionStatement
-= DELIMITER_BLOCK_LEFT_PARENTHESES (ExpressionUnit LogicalOperators)* ExpressionUnit ExpressionEquationStatement* DELIMITER_BLOCK_RIGHT_PARENTHESES
-/ (ExpressionUnit LogicalOperators)* ExpressionUnit
+= DELIMITER_BLOCK_LEFT_PARENTHESES(ExpressionUnit LogicalOperators) * ExpressionUnit ExpressionEquationStatement * DELIMITER_BLOCK_RIGHT_PARENTHESES
+  / (ExpressionUnit LogicalOperators)* ExpressionUnit
 
 LogicalOperators
 = OPERATOR_LOGICAL_AND
 / OPERATOR_LOGICAL_OR
 
 ExpressionUnit
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a.join(' ') }
+= a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a }
 
 AssignmentExpression
-= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) { return a.join(' ') }
-/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType){return a.join(' ')}
-/ a: (InstanceType ComparisonOperators InstanceType) { return a.join(' ') }
-/ a: (InstanceType VariableAtribuition) { return a.join(' ') }
-/ a: (IDENTIFIER_VARIABLES VariableAtribuition) { return a.join(' ') }
+= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) { return a }
+/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType){return a}
+/ a: (InstanceType ComparisonOperators InstanceType) { return a }
+/ a: (InstanceType VariableAtribuition) { return a }
+/ a: (IDENTIFIER_VARIABLES VariableAtribuition) { return a }
 
 
 ComparisonOperators
