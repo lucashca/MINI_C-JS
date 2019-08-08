@@ -37,7 +37,7 @@ const ENUM_TOKENS = {
     COMMAND_PRINTF: 'COMMAND_PRINTF',
     COMMAND_INCLUDE: 'COMMAND_INCLUDE',
     COMMAND_RETURN: 'COMMAND_RETURN',
-    COMMAND_ELSE:'COMMAND_ELSE',
+    COMMAND_ELSE: 'COMMAND_ELSE',
 
     IDENTIFIER_MAIN: 'IDENTIFIER_MAIN',
     IDENTIFIER_VARIABLES: 'IDENTIFIER_VARIABLES',
@@ -58,8 +58,8 @@ const ENUM_TOKENS = {
     OPERATOR_COMPARISON_EQUAL: 'OPERATOR_COMPARISON_EQUAL',
     OPERATOR_ATRIBUTION_EQUAL: 'OPERATOR_ATRIBUTION_EQUAL',
     OPERATOR_NEGATION: 'OPERATOR_NEGATION',
-    OPERATOR_LOGICAL_AND:'OPERATOR_LOGICAL_AND',
-    OPERATOR_LOGICAL_OR:'OPERATOR_LOGICAL_OR',
+    OPERATOR_LOGICAL_AND: 'OPERATOR_LOGICAL_AND',
+    OPERATOR_LOGICAL_OR: 'OPERATOR_LOGICAL_OR',
     OPERATOR_UNARY_PIPE: 'OPERATOR_UNARY_PIPE',
     OPERATOR_UNARY_E: 'OPERATOR_UNARY_E',
 
@@ -72,8 +72,8 @@ const ENUM_TOKENS = {
     DELIMITER_END_LINE: 'DELIMITER_END_LINE',
     DELIMITER_HASHTAG: 'DELIMITER_HASHTAG',
     DELIMITER_COMMA: 'DELIMITER_COMMA',
-    DELIMITER_DOT:'DELIMITER_DOT',
-    DELIMITER_DOT_COMMA:'DELIMITER_DOT_COMMA',
+    DELIMITER_DOT: 'DELIMITER_DOT',
+    DELIMITER_DOT_COMMA: 'DELIMITER_DOT_COMMA',
     COMMENT_SIMPLE: 'COMMENT_SIMPLE',
     COMMENT_MULTIPLE: 'COMMENT_MULTIPLE',
 
@@ -479,29 +479,37 @@ if (str) {
     });
 }
 
-function generateStringParser(token){
+function generateStringParser(token) {
     str = '';
-    for(let t of token){
-        str+=t.token;
-        str = setValueInString(str,t);
-        if(t.token == ENUM_TOKENS.DELIMITER_DOT_COMMA){
-           // str += '\n';
+    for (let t of token) {
+        str += t.token;
+        
+        str = setValueInString(str, t);
+        if (t.token == ENUM_TOKENS.DELIMITER_DOT_COMMA) {
+            // str += '\n';
         }
     }
     console.log(str);
+    fs.writeFileSync('out.txt',str);
     return str;
-  
+
 }
 
-function setValueInString(str,token){
-  
-    if(tokensWithValuesToParse.indexOf(token.token) > -1){
-        str+= '{'+"\""+token.value+"\""+'|'+token.line+'|'+token.column+'}';
+function setValueInString(str, token) {
+        
+    if (tokensWithValuesToParse.indexOf(token.token) > -1) {
+        if (token.value == "\b") {
+            str += '{' + '\"\"' + '|' + token.line + '|' + token.column + '}';
+        } else {
+            str += '{' + '\"' + token.value + '\"' + '|' + token.line + '|' + token.column + '}';
+            
+        }
+        console.log('{' + '"' + token.value + '"' + '|' + token.line + '|' + token.column + '}')
         //str+= '{'+"\""+clearStringReverse(token.value)+"\""+'|'+token.line+'|'+token.column+'}';
-   
+
     }
     return str;
-    
+
 
 }
 
@@ -533,7 +541,7 @@ function getInterval(pos) {
 }
 
 function clearString(s) {
-    
+
     if (s[0] == '\'' || s[0] == '\"') {
         s = s.slice(1, s.length);
     }
@@ -553,8 +561,9 @@ function clearString(s) {
 
 
 function clearStringReverse(s) {
-    
-    s = s.replace("\"", "A");
+
+    s = s.replace("\"", "a");
+
     return s;
-    
+
 }

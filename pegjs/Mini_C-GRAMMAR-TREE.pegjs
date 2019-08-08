@@ -51,7 +51,7 @@
 	function clearArray(arrInput){
  		let arrOutput = [];
         
-        for(let a in arrInput){
+        for(let a of arrInput){
         
         	if(a instanceof Array){
             	if(a.lenght > 0){
@@ -61,15 +61,16 @@
             	arrOutput.push(a);
             } 
         }
+        return arrOutput;
     }
     
     function parseValueInput(str){
-    	str = str.join('')
- 		str = str.substr(1,str.length-2)
-        console.log(str);
-        str = str.split('|');
-        console.log(str);
-        return {value:str[0],line:str[1].replace(/,/,''),column:str[2].replace(/,/,'')}
+    	    console.log(str);
+    
+    	
+      
+        
+        return {value:str[0],line:str[1],column:str[2]}
         
     }
 
@@ -147,28 +148,37 @@ CodeComposer
 
 WhileStatement
 = a: (COMMAND_WHILE ExpressionStatement CodeComposer)
+{ return {type:'WhileStatement',expression:a[1],code:a[2]} }
 
 // ************************************************************
 
 DoWhileStatement
-= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL ) { return ( a) }
+= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL )
+{ return {type:'DoWhileStatement',code:a[1],whileCmd:a[2], expression:a[3]} }
+
 //**************************************************************
 
 //IF STATEMENT
 
 IfStatement
-= c: (COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) { return ( c) }
-/ b:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) { return ( b) }
-/ a: (COMMAND_IF ExpressionStatement CodeComposer) { return (a) }
+= c: (COMMAND_IF ExpressionStatement CodeComposer) e:(COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) 
+{ return {type:'IfStatement',expression:c[1],code:c[2], elseCode:e} }
+/ c:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) 
+{ return {type:'IfStatement',expression:c[1],code:c[2], elseCode:c[4]} }
+/ c: (COMMAND_IF ExpressionStatement CodeComposer) 
+{ return {type:'IfStatement',expression:c[1],code:c[2], elseCode:"null"} }
 
 //***************************************************************
 
 // FOR STATEMENT
 ForStatement
-= a: (COMMAND_FOR ForExpressionList CodeComposer) { return ( a) }
+= a: (COMMAND_FOR ForExpressionTerm CodeComposer) 
+{return {type:'ForStatement',expression:a[1],code:a[2] }}
 
-ForExpressionList
-= DELIMITER_BLOCK_LEFT_PARENTHESES ForFistTerm ForSecondTerm ForThirdTerm DELIMITER_BLOCK_RIGHT_PARENTHESES
+
+ForExpressionTerm
+= DELIMITER_BLOCK_LEFT_PARENTHESES f:ForFistTerm s:ForSecondTerm t:ForThirdTerm DELIMITER_BLOCK_RIGHT_PARENTHESES
+{return {type:'ForExpressionTerms',fistTerm:f ,secondTerm:s, thirdTerm:t }}
 
 ForFistTerm
 = Type Identifier VariableAtribuition DELIMITER_DOT_COMMA
@@ -185,7 +195,10 @@ ForThirdTerm
 // PRINTF STATEMENT
 
 PrintfStatement
-= a: (COMMAND_PRINTF PrintfArgumentList EOL ) { return ( a) }
+= a: (COMMAND_PRINTF PrintfArgumentList EOL ) 
+{return {type:'PrintfStatement',body:a[1]}}
+
+
 
 PrintfArgumentList
 = DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_BLOCK_RIGHT_PARENTHESES
@@ -198,13 +211,16 @@ PrintfArgumentList
 
 ReturnStatement
 = a: (COMMAND_RETURN Identifier EOL)
+{return {type:'ReturnStatement',body:a[1]}}
 / a:(COMMAND_RETURN InstanceType EOL)
+{return {type:'ReturnStatement',body:a[1]}}
 
 //************************************************************
 // BREAK STATEMENT
 
 BreakStatement
 = a: (COMMAND_BREAK EOL)
+{return {type:'BreakStatement'}}
 
 //************************************************************
 
@@ -212,13 +228,16 @@ BreakStatement
 
 ContinueStatement
 = a: (COMMAND_CONTINUE EOL)
+{return {type:'ContinueStatement'}}
+
 //***********************************************************
 
 
 // SCANF STATEMENT
 
 ScanfStatement
-= a: (COMMAND_SCANF ScanfArgumentList EOL) { return ( a) }
+= a: (COMMAND_SCANF ScanfArgumentList EOL)
+{return {type:'ScanfStatement',body:a[1]}}
 
 ScanfArgumentList
 = a: (DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_COMMA Identifier DELIMITER_BLOCK_RIGHT_PARENTHESES)
@@ -235,14 +254,13 @@ VariableStatement
 
 VariableStatementList
 = varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) 
-{
-	let b = clearArray(varDec2);
-    return {type:"VariableStatementList",body:varDec}
-
-}
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray){return (varDec)} 
-/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2) }
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier){return (varDec)} 
+{ return {type:"VariableStatementList",body:clearArray(varDec2)}}
+/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray) 
+{ return {type:"VariableStatementList",body:clearArray(varDec)}}
+/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType)
+{ return {type:"VariableStatementList",body:clearArray(varDec2)}}
+/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier)
+{ return {type:"VariableStatementList",body:clearArray(varDec)}}
 
 VariableStatementAtribuition
 = a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a) }
@@ -309,22 +327,31 @@ ExpressionEquationStatement
 // DEFINITION OF EXPRESSIONS
 
 ExpressionStatement
-= DELIMITER_BLOCK_LEFT_PARENTHESES(ExpressionUnit LogicalOperators) * ExpressionUnit ExpressionEquationStatement * DELIMITER_BLOCK_RIGHT_PARENTHESES
-  / (ExpressionUnit LogicalOperators)* ExpressionUnit
+= a:(DELIMITER_BLOCK_LEFT_PARENTHESES(ExpressionUnit LogicalOperators) * ExpressionUnit ExpressionEquationStatement * DELIMITER_BLOCK_RIGHT_PARENTHESES)
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a:((ExpressionUnit LogicalOperators)* ExpressionUnit)
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+
 
 LogicalOperators
 = OPERATOR_LOGICAL_AND
 / OPERATOR_LOGICAL_OR
 
 ExpressionUnit
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a }
+= a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES)
+{return {type:'ExpressionStatement',body:clearArray(a)}}
 
 AssignmentExpression
-= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) { return a }
-/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType){return a}
-/ a: (InstanceType ComparisonOperators InstanceType) { return a }
-/ a: (InstanceType VariableAtribuition) { return a }
-/ a: (IDENTIFIER_VARIABLES VariableAtribuition) { return a }
+= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType)
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a: (InstanceType ComparisonOperators InstanceType) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a: (InstanceType VariableAtribuition) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a: (IDENTIFIER_VARIABLES VariableAtribuition) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
 
 
 ComparisonOperators
@@ -377,9 +404,12 @@ _LB = _
 = '\n'
 
 ValueInput  
-	= "{" Value "|" Line "|" Column "}"
+	= v:("{" +'"' Value* '"'+ "|" Line "|" Column "}"){return [v[2].join(''),v[5].join(''),v[7].join('')]};
 
-Value "va" = [_a-zA-Z0-9]*
+Value "va"  
+= a:(!("\"") .){return a[1]}  
+
+ 
 
 Line = [0-9]*
 
