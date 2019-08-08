@@ -1,6 +1,11 @@
 
 int main()
 {
+
+
+  c = 2 + 4 + 5;
+  int a[1] = 10,b[2] = 3;
+
   char a = '\n';
   char b = '\b';
   char c = '\t';
@@ -11,6 +16,7 @@ int main()
   char k = 'z';
   char k = 'a';
   char k = '2';
+
  if((a = 1)||(a ==b) + 124 + 124512){
 
  }
