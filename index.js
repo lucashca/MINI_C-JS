@@ -81,6 +81,17 @@ const ENUM_TOKENS = {
 
 }
 
+var tokensWithValuesToParse = [
+    ENUM_TOKENS.IDENTIFIER_POINTER_ADDRESS,
+    ENUM_TOKENS.IDENTIFIER_POINTER_VARIABLE,
+    ENUM_TOKENS.IDENTIFIER_VARIABLES,
+    ENUM_TOKENS.INSTANCE_OF_BOOL,
+    ENUM_TOKENS.INSTANCE_OF_CHAR_MULTPLE,
+    ENUM_TOKENS.INSTANCE_OF_CHAR_SIMPLE,
+    ENUM_TOKENS.INSTANCE_OF_FLOAT,
+    ENUM_TOKENS.INSTANCE_OF_INT
+];
+
 
 // DEFINE OPTIONS FOR THIS LEXER
 lexer.setIgnoreCase(true);  // SET IGNORE CASE
@@ -472,6 +483,7 @@ function generateStringParser(token){
     str = '';
     for(let t of token){
         str+=t.token;
+        str = setValueInString(str,t);
         if(t.token == ENUM_TOKENS.DELIMITER_DOT_COMMA){
            // str += '\n';
         }
@@ -479,6 +491,18 @@ function generateStringParser(token){
     console.log(str);
     return str;
   
+}
+
+function setValueInString(str,token){
+  
+    if(tokensWithValuesToParse.indexOf(token.token) > -1){
+        str+= '{'+"\""+token.value+"\""+'|'+token.line+'|'+token.column+'}';
+        //str+= '{'+"\""+clearStringReverse(token.value)+"\""+'|'+token.line+'|'+token.column+'}';
+   
+    }
+    return str;
+    
+
 }
 
 function makeIterval(arr) {
@@ -509,7 +533,7 @@ function getInterval(pos) {
 }
 
 function clearString(s) {
-    let a = 'a ';
+    
     if (s[0] == '\'' || s[0] == '\"') {
         s = s.slice(1, s.length);
     }
@@ -525,4 +549,12 @@ function clearString(s) {
     s = s.replace(/(\\")+/g, '\"');
     s = s.replace(/(\\)+/g, '\\');
     return s;
+}
+
+
+function clearStringReverse(s) {
+    
+    s = s.replace("\"", "A");
+    return s;
+    
 }

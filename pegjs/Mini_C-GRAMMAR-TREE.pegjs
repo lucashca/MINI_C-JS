@@ -1,4 +1,86 @@
 
+{
+  var TYPES_TO_PROPERTY_NAMES = {
+    CallExpression:   "callee",
+    MemberExpression: "object",
+  };
+
+  function filledArray(count, value) {
+    return Array.apply(null, new Array(count))
+      .map(function() { return value; });
+  }
+
+  function extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+
+  function extractList(list, index) {
+    return list.map(function(element) { return element[index]; });
+  }
+
+  function buildList(head, tail, index) {
+    return [head].concat(extractList(tail, index));
+  }
+
+  function buildBinaryExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "BinaryExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function buildLogicalExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "LogicalExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function optionalList(value) {
+    return value !== null ? value : [];
+  }
+
+	function clearArray(arrInput){
+ 		let arrOutput = [];
+        
+        for(let a in arrInput){
+        
+        	if(a instanceof Array){
+            	if(a.lenght > 0){
+                	arrOutput.push(a);
+                }
+            }else{
+            	arrOutput.push(a);
+            } 
+        }
+    }
+    
+    function parseValueInput(str){
+    	str = str.join('')
+ 		str = str.substr(1,str.length-2)
+        console.log(str);
+        str = str.split('|');
+        console.log(str);
+        return {value:str[0],line:str[1].replace(/,/,''),column:str[2].replace(/,/,'')}
+        
+    }
+
+
+
+}
+
+
+
+
+
 Programinit
 = InitialRule
 
@@ -148,11 +230,16 @@ ScanfArgumentList
 
 
 VariableStatement
-= varDec: (Type VariableStatementList EOL) { return (varDec) }
-/ varAss:(Identifier VariableAtribuition EOL){{return (varAss)}}
+= varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:varDec}}
+/ varAss:(Identifier VariableAtribuition EOL){ return {type:"VariableStatement", body:varAss}}
 
 VariableStatementList
-= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2) }
+= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) 
+{
+	let b = clearArray(varDec2);
+    return {type:"VariableStatementList",body:varDec}
+
+}
 / varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray){return (varDec)} 
 / varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2) }
 / varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier){return (varDec)} 
@@ -265,15 +352,15 @@ Type "Type"
 / TYPE_CHAR
 / TYPE_VOID
 
-InstanceType "InstanceType"
+
+InstanceType 
 = INSTANCE_OF_BOOL
 / INSTANCE_OF_CHAR_MULTPLE
 / INSTANCE_OF_CHAR_SIMPLE
 / INSTANCE_OF_FLOAT
-/ INSTANCE_OF_INT
+/ INSTANCE_OF_INT 
 
-
-Identifier "Identifier"
+Identifier
 = c: (IDENTIFIER_VARIABLES) { return c }
 / a:(IDENTIFIER_POINTER_ADDRESS) {return a} 
 / b: (IDENTIFIER_POINTER_VARIABLE) { return b }
@@ -289,11 +376,20 @@ _LB = _
   LineBreak 
 = '\n'
 
-INSTANCE_OF_INT = 'INSTANCE_OF_INT' { return 'Inteiro' }
-INSTANCE_OF_FLOAT = 'INSTANCE_OF_FLOAT' { return 'Decimal' }
-INSTANCE_OF_BOOL = 'INSTANCE_OF_BOOL' { return 'Boleano' }
-INSTANCE_OF_CHAR_SIMPLE = 'INSTANCE_OF_CHAR_SIMPLE' { return 'Character' }
-INSTANCE_OF_CHAR_MULTPLE = 'INSTANCE_OF_CHAR_MULTPLE' { return 'String' }
+ValueInput  
+	= "{" Value "|" Line "|" Column "}"
+
+Value "va" = [_a-zA-Z0-9]*
+
+Line = [0-9]*
+
+Column = [0-9]*
+
+INSTANCE_OF_INT = 'INSTANCE_OF_INT'  v:ValueInput { return {type:'INSTANCE_OF_INT',value:parseValueInput(v)} }
+INSTANCE_OF_FLOAT = 'INSTANCE_OF_FLOAT'  v:ValueInput { return {type:'INSTANCE_OF_FLOAT',value:parseValueInput(v)} }
+INSTANCE_OF_BOOL = 'INSTANCE_OF_BOOL'  v:ValueInput { return {type:'INSTANCE_OF_BOOL',value:parseValueInput(v)} }
+INSTANCE_OF_CHAR_SIMPLE = 'INSTANCE_OF_CHAR_SIMPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_SIMPLE',value:parseValueInput(v)} }
+INSTANCE_OF_CHAR_MULTPLE = 'INSTANCE_OF_CHAR_MULTPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_MULTPLE',value:parseValueInput(v)} }
 
 TYPE_INT = 'TYPE_INT'{ return 'int' }
 TYPE_BOOL = 'TYPE_BOOL' { return 'bool' }
@@ -314,40 +410,40 @@ COMMAND_RETURN = 'COMMAND_RETURN' { return 'return' }
 COMMAND_ELSE = 'COMMAND_ELSE' { return 'else' }
 
 IDENTIFIER_MAIN = 'IDENTIFIER_MAIN' { return 'main' }
-IDENTIFIER_VARIABLES = 'IDENTIFIER_VARIABLES' { return 'x' }
-IDENTIFIER_POINTER_VARIABLE = 'IDENTIFIER_POINTER_VARIABLE' { return '*ptr' }
-IDENTIFIER_POINTER_ADDRESS = 'IDENTIFIER_POINTER_ADDRESS'{ return '&end' }
+IDENTIFIER_VARIABLES = 'IDENTIFIER_VARIABLES' v:ValueInput { return {type:'IDENTIFIER_VARIABLES',value:parseValueInput(v)} }
+IDENTIFIER_POINTER_VARIABLE = 'IDENTIFIER_POINTER_VARIABLE' v:ValueInput { return {type:'IDENTIFIER_POINTER_VARIABLE',value:parseValueInput(v)} }
+IDENTIFIER_POINTER_ADDRESS = 'IDENTIFIER_POINTER_ADDRESS'v:ValueInput { return {type:'IDENTIFIER_POINTER_ADDRESS',value:parseValueInput(v)} }
 
-OPERATOR_ARITHMETIC_PLUS = 'OPERATOR_ARITHMETIC_PLUS'{ return '+' }
-OPERATOR_ARITHMETIC_LESS = 'OPERATOR_ARITHMETIC_LESS'{ return '-' }
-OPERATOR_ARITHMETIC_MULTIPLICATION = 'OPERATOR_ARITHMETIC_MULTIPLICATION' { return '*' }
-OPERATOR_ARITHMETIC_DIVISION = 'OPERATOR_ARITHMETIC_DIVISION' { return '/' }
-OPERATOR_ARITHMETIC_DIV = 'OPERATOR_ARITHMETIC_DIV'
-OPERATOR_ARITHMETIC_MOD = 'OPERATOR_ARITHMETIC_MOD'
-OPERATOR_COMPARISON_LESS_THEN = 'OPERATOR_COMPARISON_LESS_THEN' { return '<' }
-OPERATOR_COMPARISON_MORE_THEN = 'OPERATOR_COMPARISON_MORE_THEN' { return '>' }
-OPERATOR_COMPARISON_LESS_EQUAL = 'OPERATOR_COMPARISON_LESS_EQUAL' { return '<=' }
-OPERATOR_COMPARISON_MORE_EQUAL = 'OPERATOR_COMPARISON_MORE_EQUAL' { return '>=' }
-OPERATOR_COMPARISON_DIFFERENT = 'OPERATOR_COMPARISON_DIFFERENT' { return '!=' }
-OPERATOR_COMPARISON_EQUAL = 'OPERATOR_COMPARISON_EQUAL'{ return '==' }
-OPERATOR_ATRIBUTION_EQUAL = 'OPERATOR_ATRIBUTION_EQUAL'{ return '=' }
-OPERATOR_NEGATION = 'OPERATOR_NEGATION' { return '!' }
-OPERATOR_LOGICAL_AND = 'OPERATOR_LOGICAL_AND' { return '&&' }
-OPERATOR_LOGICAL_OR = 'OPERATOR_LOGICAL_OR' { return '||' }
-OPERATOR_UNARY_PIPE = 'OPERATOR_UNARY_PIPE' { return '|' }
-OPERATOR_UNARY_E = 'OPERATOR_UNARY_E' { return '&' }
+OPERATOR_ARITHMETIC_PLUS = 'OPERATOR_ARITHMETIC_PLUS'{ return {type:"OPERATOR_ARITHMETIC_PLUS"} }
+OPERATOR_ARITHMETIC_LESS = 'OPERATOR_ARITHMETIC_LESS'{ return {type:"OPERATOR_ARITHMETIC_LESS"} }
+OPERATOR_ARITHMETIC_MULTIPLICATION = 'OPERATOR_ARITHMETIC_MULTIPLICATION' { return {type:"OPERATOR_ARITHMETIC_MULTIPLICATION"} }
+OPERATOR_ARITHMETIC_DIVISION = 'OPERATOR_ARITHMETIC_DIVISION' { return {type:"OPERATOR_ARITHMETIC_DIVISION"} }
+OPERATOR_ARITHMETIC_DIV = 'OPERATOR_ARITHMETIC_DIV' { return {type:"OPERATOR_ARITHMETIC_DIV"} }
+OPERATOR_ARITHMETIC_MOD = 'OPERATOR_ARITHMETIC_MOD' { return {type:"OPERATOR_ARITHMETIC_MOD"} }
+OPERATOR_COMPARISON_LESS_THEN = 'OPERATOR_COMPARISON_LESS_THEN' { return {type:"OPERATOR_COMPARISON_LESS_THEN"} }
+OPERATOR_COMPARISON_MORE_THEN = 'OPERATOR_COMPARISON_MORE_THEN' { return {type:"OPERATOR_COMPARISON_MORE_THEN"} }
+OPERATOR_COMPARISON_LESS_EQUAL = 'OPERATOR_COMPARISON_LESS_EQUAL' { return {type:"OPERATOR_COMPARISON_LESS_EQUAL"} }
+OPERATOR_COMPARISON_MORE_EQUAL = 'OPERATOR_COMPARISON_MORE_EQUAL' { return {type:"OPERATOR_COMPARISON_MORE_EQUAL"} }
+OPERATOR_COMPARISON_DIFFERENT = 'OPERATOR_COMPARISON_DIFFERENT' { return {type:"OPERATOR_COMPARISON_DIFFERENT"} }
+OPERATOR_COMPARISON_EQUAL = 'OPERATOR_COMPARISON_EQUAL' { return {type:"OPERATOR_COMPARISON_EQUAL"} }
+OPERATOR_ATRIBUTION_EQUAL = 'OPERATOR_ATRIBUTION_EQUAL' { return {type:"OPERATOR_ATRIBUTION_EQUAL"} }
+OPERATOR_NEGATION = 'OPERATOR_NEGATION' { return {type:"OPERATOR_NEGATION"} }
+OPERATOR_LOGICAL_AND = 'OPERATOR_LOGICAL_AND' { return {type:"OPERATOR_LOGICAL_AND"} }
+OPERATOR_LOGICAL_OR = 'OPERATOR_LOGICAL_OR' { return {type:"OPERATOR_LOGICAL_OR"} }
+OPERATOR_UNARY_PIPE = 'OPERATOR_UNARY_PIPE' { return {type:"OPERATOR_UNARY_PIPE"} }
+OPERATOR_UNARY_E = 'OPERATOR_UNARY_E' { return {type:"OPERATOR_UNARY_E"} }
 
-DELIMITER_BLOCK_LEFT_BRACKET = 'DELIMITER_BLOCK_LEFT_BRACKET'
-DELIMITER_BLOCK_LEFT_BRACE = 'DELIMITER_BLOCK_LEFT_BRACE' { return 'LC' }
-DELIMITER_BLOCK_LEFT_PARENTHESES = 'DELIMITER_BLOCK_LEFT_PARENTHESES' { return '(' }
-DELIMITER_BLOCK_RIGHT_BRACKET = 'DELIMITER_BLOCK_RIGHT_BRACKET'
-DELIMITER_BLOCK_RIGHT_BRACE = 'DELIMITER_BLOCK_RIGHT_BRACE' { return '\nRC' }
-DELIMITER_BLOCK_RIGHT_PARENTHESES = 'DELIMITER_BLOCK_RIGHT_PARENTHESES' { return ')' }
-DELIMITER_END_LINE = 'DELIMITER_END_LINE'
-DELIMITER_HASHTAG = 'DELIMITER_HASHTAG'
-DELIMITER_COMMA = 'DELIMITER_COMMA'{ return ',' }
-DELIMITER_DOT = 'DELIMITER_DOT'
-DELIMITER_DOT_COMMA = 'DELIMITER_DOT_COMMA' { return ';' }
+DELIMITER_BLOCK_LEFT_BRACKET = 'DELIMITER_BLOCK_LEFT_BRACKET' { return {type:"DELIMITER_BLOCK_LEFT_BRACKET"} }
+DELIMITER_BLOCK_LEFT_BRACE = 'DELIMITER_BLOCK_LEFT_BRACE' { return {type:"DELIMITER_BLOCK_LEFT_BRACE"} }
+DELIMITER_BLOCK_LEFT_PARENTHESES = 'DELIMITER_BLOCK_LEFT_PARENTHESES' { return {type:"DELIMITER_BLOCK_LEFT_PARENTHESES"} }
+DELIMITER_BLOCK_RIGHT_BRACKET = 'DELIMITER_BLOCK_RIGHT_BRACKET' { return {type:"DELIMITER_BLOCK_RIGHT_BRACKET"} }
+DELIMITER_BLOCK_RIGHT_BRACE = 'DELIMITER_BLOCK_RIGHT_BRACE' { return {type:"DELIMITER_BLOCK_RIGHT_BRACE"} }
+DELIMITER_BLOCK_RIGHT_PARENTHESES = 'DELIMITER_BLOCK_RIGHT_PARENTHESES' { return {type:"DELIMITER_BLOCK_RIGHT_PARENTHESES"} }
+DELIMITER_END_LINE = 'DELIMITER_END_LINE' { return {type:"DELIMITER_END_LINE"} }
+DELIMITER_HASHTAG = 'DELIMITER_HASHTAG'{ return {type:"DELIMITER_HASHTAG"} }
+DELIMITER_COMMA = 'DELIMITER_COMMA'{ return {type:"DELIMITER_COMMA"} }
+DELIMITER_DOT = 'DELIMITER_DOT' { return {type:"DELIMITER_DOT"} }
+DELIMITER_DOT_COMMA = 'DELIMITER_DOT_COMMA' { return {type:"DELIMITER_DOT_COMMA"} }
 
 COMMENT_SIMPLE = 'COMMENT_SIMPLE'
 COMMENT_MULTIPLE = 'COMMENT_MULTIPLE'
