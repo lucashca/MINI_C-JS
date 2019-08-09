@@ -251,6 +251,10 @@ ScanfArgumentList
 VariableStatement
 = varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:varDec}}
 / varAss:(Identifier VariableAtribuition EOL){ return {type:"VariableStatement", body:varAss}}
+/ varDec:(Type Identifier VariableDaclarationList EOL) { return {type:"VariableStatement", body:varDec}}
+
+VariableDaclarationList 
+= vardec:(OPERATOR_ATRIBUTION_EQUAL) vardec2:(ExpressionStatement)
 
 VariableStatementList
 = varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) 
@@ -260,11 +264,14 @@ VariableStatementList
 / varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType)
 { return {type:"VariableStatementList",body:clearArray(varDec2)}}
 / varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier)
-{ return {type:"VariableStatementList",body:clearArray(varDec)}}
+{ return {type:"VariableStatementLists",body:clearArray(varDec)}}
 
-VariableStatementAtribuition
-= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a) }
-/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a) }
+VariableStatementAtribuition 
+= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) 
+{ return {type:"VariableStatementAtribuition",body:a}}
+
+/ a: (Identifier VariableAtribuition DELIMITER_COMMA){ return {type:"VariableStatementAtribuition",body:a}}
+/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return {type:"VariableStatementAtribuition",body:a}}
 
 VariableStatementSimple
 = a: (Identifier DELIMITER_COMMA) { return (a.join('')) }
@@ -275,17 +282,22 @@ VariableStatementArray
 
 
 VariableAtribuition
-= a: (OPERATOR_ATRIBUTION_EQUAL Equation)
-/ a:( OPERATOR_ATRIBUTION_EQUAL InstanceType)
-/ a: (OPERATOR_ATRIBUTION_EQUAL Identifier)
+= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
 
+
+VariableAtribuitionTypes
+= ExpressionStatement
+/ AssignmentExpression
+/ Equation
+/ InstanceType
+/ Identifier
 //***************************************************************
 
 // SOME EQUATION OPERATIONS    
 
 
 Equation
-= a: (Term(MoreOrLess Term) *){ return a }
+= a: (Term (MoreOrLess Term) *){ return a }
 
 Term
 = a: (Factor(SomeOperators Factor) *){ return a }
@@ -332,7 +344,6 @@ ExpressionStatement
 / a:((ExpressionUnit LogicalOperators)* ExpressionUnit)
 {return {type:'ExpressionStatement',body:clearArray(a)}}
 
-
 LogicalOperators
 = OPERATOR_LOGICAL_AND
 / OPERATOR_LOGICAL_OR
@@ -340,17 +351,30 @@ LogicalOperators
 ExpressionUnit
 = a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES)
 {return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a:AssignmentExpression
+{return {type:'ExpressionStatement',body:a}}
+/ a: OPERATOR_NEGATION (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES)
+{return {type:'ExpressionStatement',body:a}}
+/ a:OPERATOR_NEGATION AssignmentExpression
+{return {type:'ExpressionStatement',body:a}}
 
-AssignmentExpression
-= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) 
+
+AssignmentExpression 
+= a: (Identifier ComparisonOperators Identifier) 
 {return {type:'ExpressionStatement',body:clearArray(a)}}
-/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType)
+/ a:(Identifier ComparisonOperators InstanceType)
 {return {type:'ExpressionStatement',body:clearArray(a)}}
 / a: (InstanceType ComparisonOperators InstanceType) 
 {return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a: (Identifier LogicalOperators Identifier) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a:(Identifier LogicalOperators InstanceType)
+{return {type:'ExpressionStatement',body:clearArray(a)}}
+/ a: (InstanceType LogicalOperators InstanceType) 
+{return {type:'ExpressionStatement',body:clearArray(a)}}
 / a: (InstanceType VariableAtribuition) 
 {return {type:'ExpressionStatement',body:clearArray(a)}}
-/ a: (IDENTIFIER_VARIABLES VariableAtribuition) 
+/ a: (Identifier VariableAtribuition) 
 {return {type:'ExpressionStatement',body:clearArray(a)}}
 
 
@@ -361,6 +385,7 @@ ComparisonOperators
 / OPERATOR_COMPARISON_LESS_THEN
 / OPERATOR_COMPARISON_MORE_EQUAL
 / OPERATOR_COMPARISON_MORE_THEN
+/ OPERATOR_NEGATION OPERATOR_ATRIBUTION_EQUAL 
 / LogicalOperators
 
 // *****************************************
@@ -390,7 +415,8 @@ InstanceType
 Identifier
 = c: (IDENTIFIER_VARIABLES) { return c }
 / a:(IDENTIFIER_POINTER_ADDRESS) {return a} 
-/ b: (IDENTIFIER_POINTER_VARIABLE) { return b }
+/ b: (OPERATOR_UNARY_E* OPERATOR_ARITHMETIC_MULTIPLICATION* IDENTIFIER_POINTER_VARIABLE) { return {type:"IDENTIFIER_POINTER_VARIABLE", body:clearArray(b)} }
+
 
 _ "Optional Whitespace"
 = w: [\t\n\r] * { return[w.join('')] }
@@ -421,25 +447,25 @@ INSTANCE_OF_BOOL = 'INSTANCE_OF_BOOL'  v:ValueInput { return {type:'INSTANCE_OF_
 INSTANCE_OF_CHAR_SIMPLE = 'INSTANCE_OF_CHAR_SIMPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_SIMPLE',value:parseValueInput(v)} }
 INSTANCE_OF_CHAR_MULTPLE = 'INSTANCE_OF_CHAR_MULTPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_MULTPLE',value:parseValueInput(v)} }
 
-TYPE_INT = 'TYPE_INT'{ return 'int' }
-TYPE_BOOL = 'TYPE_BOOL' { return 'bool' }
-TYPE_FLOAT = 'TYPE_FLOAT' { return 'float' }
-TYPE_CHAR = 'TYPE_CHAR' { return 'char' }
-TYPE_VOID = 'TYPE_VOID' { return 'void' }
+TYPE_INT = 'TYPE_INT'   { return {type:'TYPE_INT'} }
+TYPE_BOOL = 'TYPE_BOOL'   { return {type:'TYPE_BOOL'} }
+TYPE_FLOAT = 'TYPE_FLOAT'  { return {type:'TYPE_FLOAT'} }
+TYPE_CHAR = 'TYPE_CHAR' { return {type:'TYPE_CHAR'} }
+TYPE_VOID = 'TYPE_VOID'   { return {type:'TYPE_VOID'} }
 
-COMMAND_IF = 'COMMAND_IF'{ return 'if' }
-COMMAND_FOR = 'COMMAND_FOR' { return 'for' }
-COMMAND_WHILE = 'COMMAND_WHILE' { return 'while' }
-COMMAND_DO = 'COMMAND_DO' { return 'do' }
-COMMAND_BREAK = 'COMMAND_BREAK' { return 'break' }
-COMMAND_CONTINUE = 'COMMAND_CONTINUE' { return 'continue' }
-COMMAND_SCANF = 'COMMAND_SCANF'{ return 'scanf' }
-COMMAND_PRINTF = 'COMMAND_PRINTF' { return 'print' }
-COMMAND_INCLUDE = 'COMMAND_INCLUDE' { return 'include' }
-COMMAND_RETURN = 'COMMAND_RETURN' { return 'return' }
-COMMAND_ELSE = 'COMMAND_ELSE' { return 'else' }
+COMMAND_IF = 'COMMAND_IF'{ return {type:'COMMAND_IF'} }
+COMMAND_FOR = 'COMMAND_FOR' { return {type:'COMMAND_FOR'} }
+COMMAND_WHILE = 'COMMAND_WHILE'  { return {type:'COMMAND_WHILE'} }
+COMMAND_DO = 'COMMAND_DO'  { return {type:'COMMAND_DO'} }
+COMMAND_BREAK = 'COMMAND_BREAK'  { return {type:'COMMAND_BREAK'} }
+COMMAND_CONTINUE = 'COMMAND_CONTINUE'  { return {type:'COMMAND_CONTINUE'} }
+COMMAND_SCANF = 'COMMAND_SCANF'  { return {type:'COMMAND_SCANF'} }
+COMMAND_PRINTF = 'COMMAND_PRINTF'  { return {type:'COMMAND_PRINTF'} }
+COMMAND_INCLUDE = 'COMMAND_INCLUDE'  { return {type:'COMMAND_INCLUDE'} }
+COMMAND_RETURN = 'COMMAND_RETURN' { return {type:'COMMAND_RETURN'} }
+COMMAND_ELSE = 'COMMAND_ELSE' { return {type:'COMMAND_ELSE'} }
 
-IDENTIFIER_MAIN = 'IDENTIFIER_MAIN' { return 'main' }
+IDENTIFIER_MAIN = 'IDENTIFIER_MAIN' { return {type:'IDENTIFIER_MAIN' }}
 IDENTIFIER_VARIABLES = 'IDENTIFIER_VARIABLES' v:ValueInput { return {type:'IDENTIFIER_VARIABLES',value:parseValueInput(v)} }
 IDENTIFIER_POINTER_VARIABLE = 'IDENTIFIER_POINTER_VARIABLE' v:ValueInput { return {type:'IDENTIFIER_POINTER_VARIABLE',value:parseValueInput(v)} }
 IDENTIFIER_POINTER_ADDRESS = 'IDENTIFIER_POINTER_ADDRESS'v:ValueInput { return {type:'IDENTIFIER_POINTER_ADDRESS',value:parseValueInput(v)} }

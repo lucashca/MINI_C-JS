@@ -2,8 +2,9 @@
 int main()
 {
 
+  int *ptr;
 
-  c = 2 + 4 + 5;
+  c = &o&&&o;
   int a[1] = 10,b[2] = 3;
 
   char a = '\n';
