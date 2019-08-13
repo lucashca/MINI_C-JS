@@ -3,8 +3,8 @@
 //java -jar java-cup-11b.jar -interface -parser parser parser.cup
 
 int main(){
-    
-	 c = &o&&&o;
+    int i;
+	g = &(i=i=1);
 	char nome[64]; // vetor de 64 chars para o nome
 	float num;
 	int conut=0;
@@ -24,7 +24,7 @@ int main(){
 
       
     m=(50*199)+(200-23);
-	if ((num ==1)&&(nu1!= 0)||(num>=10))
+	if ((num ==1)&&(nu1=num=0)||(num>=10))
 	{
 		/* code */
 	} else{

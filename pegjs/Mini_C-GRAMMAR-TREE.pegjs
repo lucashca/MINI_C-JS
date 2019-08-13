@@ -61,7 +61,7 @@
             	arrOutput.push(a);
             } 
         }
-        return arrOutput;
+        return arrInput;
     }
     
     function parseValueInput(str){
@@ -283,6 +283,8 @@ VariableStatementArray
 
 VariableAtribuition
 = a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
+/a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
+
 
 
 VariableAtribuitionTypes
