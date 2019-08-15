@@ -309,9 +309,9 @@ ScanfArgumentList
 
 
 VariableStatement
-= varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:varDec}}
-/ varAss:(Identifier VariableAtribuition EOL){ return {type:"VariableStatement", body:varAss}}
-/ varDec:(Type Identifier VariableDaclarationList EOL) { return {type:"VariableStatement", body:varDec}}
+= varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:makeLinearize(varDec)}}
+/ varAss:(VariableStatementList EOL){ return {type:"VariableStatement", body:makeLinearize(varAss)}}
+/ varDec:(Type Identifier VariableDaclarationList EOL) { return {type:"VariableStatement", body:makeLinearize(varDec)}}
 
 VariableDaclarationList 
 = vardec:(OPERATOR_ATRIBUTION_EQUAL) vardec2:(ExpressionStatement)
@@ -330,6 +330,7 @@ VariableStatementLast
 = Identifier VariableStatementArray VariableAtribuition
 / Identifier VariableStatementArray+
 / Identifier VariableAtribuition
+/ Identifier VariableDaclarationList
 / Identifier 
 
 
@@ -359,7 +360,7 @@ VariableStatementArray
 
 
 VariableAtribuition 
-= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes){return a}
+= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
 /a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
 
 

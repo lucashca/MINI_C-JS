@@ -1,11 +1,13 @@
 int main(){ //função principal
-    int a[10][10],b,c;
-    if(a||b){
-       int b;
-       if((b ==1)||(c==0)||(c==11)){
-          int c = 0;
-          int d = 12 + 24*124;
-       }
+    int b = 0,c = 122;
+    b = 11 + 13*114124;
+    c = 123;
+    int d;
+    if( c || d){
+       c = 12;
+       int c = 11;
+       c = 15;
+
+       int d;
     }
-    
 }//fim do programa

@@ -31,7 +31,7 @@ class Semantics {
     run() {
         var str = JSON.stringify(this.body, null, 2);
         //console.log(str);
-        
+
         for (let statement of this.body) {
             this.make(statement);
 
@@ -49,14 +49,14 @@ class Semantics {
 function ExpressionStatement(statement) {
     let type = statement.type;
     let body = statement.body;
-     if(body instanceof Array){
+    if (body instanceof Array) {
         for (let state of statement.body) {
             VerifyStatement(state);
         }
-    }else{
+    } else {
         VerifyStatement(body);
     }
-    
+
 }
 
 function IfStatement(statement) {
@@ -82,7 +82,7 @@ function getIndexScope(str) {
 }
 
 function VerifyStatement(statement, typeOfVar) {
-   
+
     if (statement.type == ENUM_LIST.STATEMENTS_ENUM.EXPRESSION_UNIT) {
         ExpressionUnitStatement(statement);
     }
@@ -114,15 +114,15 @@ function VerifyStatement(statement, typeOfVar) {
         DoWhileStatement(statement);
     }
     if (statement.type == ENUM_LIST.STATEMENTS_ENUM.EQUATION) {
-        EquationStatement(statement,typeOfVar);
+        EquationStatement(statement, typeOfVar);
     }
 }
 
-function VariableStatementAtribuitionArraySimple(statement,typeOfVar){
+function VariableStatementAtribuitionArraySimple(statement, typeOfVar) {
     VariableSimpleStatement(statement, typeOfVar)
 }
 
-function VariableStatementArray(statement,typeOfVar){
+function VariableStatementArray(statement, typeOfVar) {
     setVariableAtribution(statement, typeOfVar);
 }
 
@@ -131,10 +131,68 @@ function DoWhileStatement(statement) {
 }
 
 function VariableStatement(statement) {
+
+
     let typeOfVar = statement.body[0].type;
-    let statementList = statement.body[1];
-    VariableStatementList(statementList, typeOfVar);
+    let body = statement.body[1];
+
+
+    if (body.type == ENUM_LIST.STATEMENTS_ENUM.VARIABLE_LIST) {
+        VariableStatementList(body, typeOfVar);
+    } else {
+        body = statement.body[0];
+
+        VariableStatementList(body, null);
+
+
+
+        //typeOfVar = getType()
+
+        /*
+        let b = statement.body[0];
+        let atrib = statement.body[1][1];
+        let val = '';
+        if(atrib.type == ENUM_LIST.STATEMENTS_ENUM.EQUATION){
+            let val = EquationStatement(atrib);
+        }
+        
+        console.log(atrib);
+        
+        let tableRow = new SamanticTableData('', b.value.value, '', b.value.line, b.value.column, scopeLabel[scopeLabel.length - 1]);
+        //let type = getType(identifier);
+        */
+
+    }
+
+
 }
+
+function getType(identifier) {
+      
+    for (let i = 1; i <= scopeLabel.length ; i ++) {
+        console.log(scopeLabel);
+        console.log(scopeLabel[scopeLabel.length - i]);
+        for (let r of simbolicTable) {
+            if (r.identifier == identifier && r.scope == scopeLabel[scopeLabel.length - i]) {
+                return r.type;
+            }
+        }
+    }
+}
+
+function updateData(row) {
+    for (let i in simbolicTable) {
+
+        let r = simbolicTable[i];
+        if (r.identifier == row.identifier) {
+            row.scope = r.scope;
+            simbolicTable[i] = row;
+        };
+    }
+}
+
+
+
 
 function depthSearch(body, typeOfVar) {
     if (body instanceof Array) {
@@ -142,7 +200,7 @@ function depthSearch(body, typeOfVar) {
             depthSearch(b, typeOfVar);
         }
     } else {
-        if(body != undefined)
+        if (body != undefined)
             VerifyStatement(body, typeOfVar);
     }
 }
@@ -151,13 +209,12 @@ function VariableStatementList(statement, typeOfVar) {
     //console.log(statement);
     let body = statement.body;
     let tail = statement.tail;
-    console.log(statement);
-    if(tail == undefined){
+    if (tail == undefined) {
         let tableRow = new SamanticTableData(typeOfVar, body.value.value, '', body.value.line, body.value.column, scopeLabel[scopeLabel.length - 1]);
-  
+
     }
     depthSearch(body, typeOfVar);
-   
+
     depthSearch(tail, typeOfVar);
 }
 
@@ -166,7 +223,7 @@ function VariableSimpleStatement(statement, typeOfVar) {
     if (body instanceof Array) {
         body = body[0];
     }
-    
+
     //console.log(body);
     let tableRow = new SamanticTableData(typeOfVar, body.value.value, '', body.value.line, body.value.column, scopeLabel[scopeLabel.length - 1]);
     putOnTable(tableRow);
@@ -184,7 +241,6 @@ function setVariableAtribution(statement, typeOfVar) {
     let body = statement.body;
     let val = '';
     let atrib = body[2];
-    
     if (atrib.type == ENUM_LIST.STATEMENTS_ENUM.EQUATION) {
         val = EquationStatement(atrib, typeOfVar);
     } else {
@@ -201,14 +257,14 @@ function setVariableAtribution(statement, typeOfVar) {
 
 function ExpressionUnitStatement(statement) {
     let body = statement.body;
-    if(!(body instanceof Array)){
-       body = [body];
+    if (!(body instanceof Array)) {
+        body = [body];
     }
     for (let state of body) {
-       
-        if(!( state.body instanceof Array)){
-            state.body = [ state.body];
-         }
+
+        if (!(state.body instanceof Array)) {
+            state.body = [state.body];
+        }
         for (let sta of state.body) {
             if (ENUM_LIST.IDENTIFIER.includes(sta.type)) {
                 if (!containsValue(sta.value.value)) {
@@ -223,19 +279,29 @@ function VariableAtribuitionStatement(statement, typeOfVar) {
     let body = statement.body;
     let val = '';
     let atrib = body[2];
+    
+    let update = false;
+    if (typeOfVar == null) {
+        typeOfVar = getType(body[0].value.value);
+        update = true;
+    }
     if (atrib.type == ENUM_LIST.STATEMENTS_ENUM.EQUATION) {
         val = EquationStatement(atrib, typeOfVar);
     }
     let tableRow = new SamanticTableData(typeOfVar, body[0].value.value, val, body[0].value.line, body[0].value.column, scopeLabel[scopeLabel.length - 1]);
-    putOnTable(tableRow);
+    if (update) {
+        updateData(tableRow);
+    } else {
+        putOnTable(tableRow);
+    }
 }
 
 function EquationStatement(statement, typeOfVar) {
     let type = statement.type;
     let body = statement.body;
     let str = '';
-    
-    if(!(body instanceof Array)){
+
+    if (!(body instanceof Array)) {
         body = [body];
     }
 
@@ -376,9 +442,13 @@ function compareTypes(t1, t2) {
 }
 
 function variableStatement(statement) {
+
     let typeOfVar = statement.body[0].type;
     let statementList = statement.body[1].body;
     let tail = statement.body[1].tail;
+
+
+
     variableStatementDeph(statementList, typeOfVar);
     variableStatementDeph(tail, typeOfVar);
 
