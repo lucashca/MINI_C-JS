@@ -1,10 +1,154 @@
 
-Program_init
+{
+  var TYPES_TO_PROPERTY_NAMES = {
+    CallExpression:   "callee",
+    MemberExpression: "object",
+  };
+
+  function filledArray(count, value) {
+    return Array.apply(null, new Array(count))
+      .map(function() { return value; });
+  }
+
+  function extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+
+  function extractList(list, index) {
+    return list.map(function(element) { return element[index]; });
+  }
+
+  function buildList(head, tail, index) {
+    return [head].concat(extractList(tail, index));
+  }
+
+  function buildBinaryExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "BinaryExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function buildLogicalExpression(head, tail) {
+    return tail.reduce(function(result, element) {
+      return {
+        type: "LogicalExpression",
+        operator: element[1],
+        left: result,
+        right: element[3]
+      };
+    }, head);
+  }
+
+  function optionalList(value) {
+    return value !== null ? value : [];
+  }
+
+	function clearArray(arrInput){
+ 		let arrOutput = [];
+        
+        for(let a of arrInput){
+        
+        	if(a instanceof Array){
+            	if(a.lenght > 0){
+                	arrOutput.push(a);
+                }
+            }else{
+            	arrOutput.push(a);
+            } 
+        }
+        return arrInput;
+    }
+    
+    function parseValueInput(str){
+    	
+        
+        return {value:str[0],line:str[1],column:str[2]}
+        
+    }
+
+function clearArr(arrInput){
+ 		let arrOutput = [];
+        for(let a of arrInput){
+        	
+        	if(a instanceof Array){
+           		if(a.lenght > 0){
+                	arrOutput.push(a);
+                }
+            }
+            if(a instanceof Object){
+            	arrOutput.push(a);
+            }
+           
+        }
+        return arrOutput;
+    }
+
+function serialize(arr){
+	let arrOutput = [];
+    if (arr instanceof Array){
+    for(let i of arr){
+    	if(i instanceof Array){
+        	if(i.length > 0){
+            	i = serialize(i);
+            	arrOutput.push(i);
+            }
+        }else{
+        	arrOutput.push(i);
+        }
+    }
+    }else{
+    	return arr;
+    }
+
+    console.log(arrOutput);
+    return arrOutput;
+	
+}
+
+
+function makeLinearize(arr){
+    let outArr = [];
+    linearize(arr,outArr);
+    if(outArr.length == 1){
+    	return outArr[0];
+    }
+    return outArr;
+}
+
+function linearize(arr,outArr) {
+    if (arr instanceof Array) {
+        if (arr.length > 0) {
+            for (let i of arr) {
+                linearize(i,outArr);
+            }
+        }
+    }else{
+        outArr.push(arr);
+    }
+
+}
+
+
+
+
+}
+
+
+
+
+
+Programinit
 = InitialRule
 
 InitialRule
-= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return main2.join(' ') }
-/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main.join(' ')} 
+= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return {type:'main',body:'empty'} }
+/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return {type:'main',body:main[5]} }
+/ main:(IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return {type:'main',body:main[4]} }
 
 Program
 = (SourceElement) *
@@ -58,34 +202,43 @@ EOF "EOF"
 
 
 CodeComposer
-= IOS Program EOS
+= IOS a:Program EOS {return makeLinearize(a);}
 
 //WHILE STATEMENT
 
 WhileStatement
 = a: (COMMAND_WHILE ExpressionStatement CodeComposer)
+{ return {type:'WhileStatement',expression:a[1],code:a[2]} }
 
 // ************************************************************
 
 DoWhileStatement
-= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL ) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_DO CodeComposer COMMAND_WHILE ExpressionStatement EOL )
+{ return {type:'DoWhileStatement',code:a[1],whileCmd:a[2], expression:a[3]} }
+
 //**************************************************************
 
 //IF STATEMENT
 
 IfStatement
-= c:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) { return ('\n' + c.join(' ')) }
-/ b:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) { return ('\n' + b.join(' ')) }
-/ a:(COMMAND_IF ExpressionStatement CodeComposer) {return("\n"+a.join(' '))}
+= c: (COMMAND_IF ExpressionStatement CodeComposer) e:(COMMAND_ELSE COMMAND_IF ExpressionStatement CodeComposer) 
+{ return {type:'IfStatement',expression:makeLinearize(c[1]),code:c[2], elseCode:e} }
+/ c:(COMMAND_IF ExpressionStatement CodeComposer COMMAND_ELSE CodeComposer) 
+{ return {type:'IfStatement',expression:makeLinearize(c[1]),code:c[2], elseCode:c[4]} }
+/ c: (COMMAND_IF ExpressionStatement CodeComposer) 
+{ return {type:'IfStatement',expression:makeLinearize(c[1]),code:c[2], elseCode:"null"} }
 
 //***************************************************************
 
 // FOR STATEMENT
 ForStatement
-= a: (COMMAND_FOR ForExpressionList CodeComposer) { return ('\n' + a.join(' ')) }
+= a: (COMMAND_FOR ForExpressionTerm CodeComposer) 
+{return {type:'ForStatement',expression:a[1],code:a[2] }}
 
-ForExpressionList
-= DELIMITER_BLOCK_LEFT_PARENTHESES ForFistTerm ForSecondTerm ForThirdTerm DELIMITER_BLOCK_RIGHT_PARENTHESES
+
+ForExpressionTerm
+= DELIMITER_BLOCK_LEFT_PARENTHESES f:ForFistTerm s:ForSecondTerm t:ForThirdTerm DELIMITER_BLOCK_RIGHT_PARENTHESES
+{return {type:'ForExpressionTerms',fistTerm:f ,secondTerm:s, thirdTerm:t }}
 
 ForFistTerm
 = Type Identifier VariableAtribuition DELIMITER_DOT_COMMA
@@ -102,7 +255,10 @@ ForThirdTerm
 // PRINTF STATEMENT
 
 PrintfStatement
-= a: (COMMAND_PRINTF PrintfArgumentList EOL ) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_PRINTF PrintfArgumentList EOL ) 
+{return {type:'PrintfStatement',body:a[1]}}
+
+
 
 PrintfArgumentList
 = DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_BLOCK_RIGHT_PARENTHESES
@@ -115,13 +271,16 @@ PrintfArgumentList
 
 ReturnStatement
 = a: (COMMAND_RETURN Identifier EOL)
+{return {type:'ReturnStatement',body:a[1]}}
 / a:(COMMAND_RETURN InstanceType EOL)
+{return {type:'ReturnStatement',body:a[1]}}
 
 //************************************************************
 // BREAK STATEMENT
 
 BreakStatement
 = a: (COMMAND_BREAK EOL)
+{return {type:'BreakStatement'}}
 
 //************************************************************
 
@@ -129,13 +288,16 @@ BreakStatement
 
 ContinueStatement
 = a: (COMMAND_CONTINUE EOL)
+{return {type:'ContinueStatement'}}
+
 //***********************************************************
 
 
 // SCANF STATEMENT
 
 ScanfStatement
-= a: (COMMAND_SCANF ScanfArgumentList EOL) { return ('\n' + a.join(' ') + '\n') }
+= a: (COMMAND_SCANF ScanfArgumentList EOL)
+{return {type:'ScanfStatement',body:a[1]}}
 
 ScanfArgumentList
 = a: (DELIMITER_BLOCK_LEFT_PARENTHESES STRINGS DELIMITER_COMMA Identifier DELIMITER_BLOCK_RIGHT_PARENTHESES)
@@ -147,54 +309,90 @@ ScanfArgumentList
 
 
 VariableStatement
-= varDec: (Type VariableStatementList EOL) { return ("\n" + varDec.join(' ')) }
-/ varAss:(Identifier VariableAtribuition EOL){{return ("\n"+varAss.join(' '))}}
+= varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:varDec}}
+/ varAss:(Identifier VariableAtribuition EOL){ return {type:"VariableStatement", body:varAss}}
+/ varDec:(Type Identifier VariableDaclarationList EOL) { return {type:"VariableStatement", body:varDec}}
+
+VariableDaclarationList 
+= vardec:(OPERATOR_ATRIBUTION_EQUAL) vardec2:(ExpressionStatement)
 
 VariableStatementList
-= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2.join(' ')) }
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray){return (varDec.join(' '))} 
-/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) { return (varDec2.join(' ')) }
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier){return (varDec.join(' '))} 
+= varDec2: (VariableStatementTypes*) tail:(Identifier VariableStatementArray VariableAtribuition) 
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementArrayAtribuition',body:makeLinearize(tail)}}}
+/ varDec2: (VariableStatementTypes*) tail:(Identifier VariableStatementArray+) 
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementArray',body:makeLinearize(tail)}}}
+/ varDec2: (VariableStatementTypes*) tail:( Identifier VariableAtribuition) 
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementAtribuition',body:makeLinearize(tail)}}}
+/ varDec2: (VariableStatementTypes*) tail:(Identifier) 
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementSimple',body:makeLinearize(tail)}}}
 
-VariableStatementAtribuition
-= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a.join(' ')) }
-/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return (a.join(' ')) }
+VariableStatementLast
+= Identifier VariableStatementArray VariableAtribuition
+/ Identifier VariableStatementArray+
+/ Identifier VariableAtribuition
+/ Identifier 
+
+
+VariableStatementTypes
+= VariableStatementAtribuition
+/ VariableStatementSimple
+
+
+VariableStatementAtribuition 
+= a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) DELIMITER_COMMA
+{ return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
+/ a: (Identifier VariableAtribuition) DELIMITER_COMMA
+{ return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
+/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) DELIMITER_COMMA 
+{ return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
+/ a: (Identifier VariableStatementArray+) DELIMITER_COMMA 
+{ return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
+
+
 
 VariableStatementSimple
-= a: (Identifier DELIMITER_COMMA) { return (a.join('')) }
-/ a:(Identifier VariableStatementArray DELIMITER_COMMA)
+= a: (Identifier) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
+/ a:(Identifier VariableStatementArray) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
 
 VariableStatementArray
-= a:(DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)
+= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)  { return {type:'VariableStatementArray',body:a}}
 
 
-VariableAtribuition
-= a: (OPERATOR_ATRIBUTION_EQUAL Equation)
-/ a:( OPERATOR_ATRIBUTION_EQUAL InstanceType)
-/ a: (OPERATOR_ATRIBUTION_EQUAL Identifier)
+VariableAtribuition 
+= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes){return a}
+/a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
 
+
+
+VariableAtribuitionTypes
+= ExpressionStatement
+/ AssignmentExpression
+/ Equation
+/ InstanceType
+/ Identifier
 //***************************************************************
 
 // SOME EQUATION OPERATIONS    
 
+	
 
-Equation
-= a: (Term(MoreOrLess Term) *){ return a.join(' ') }
+Equation 
+= a: (Term (MoreOrLess Term)*){ return {type:'Equation',body:makeLinearize(serialize(a))} }
 
 Term
-= a: (Factor(SomeOperators Factor) *){ return a.join(' ') }
+= a: (Factor (SomeOperators Factor)*){ return serialize(a) }
 
 Factor
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a.join(' ') }
-/ a:Numeric{return a} 
-/ a: Identifier{ return a }
+= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return serialize(a) }
+/ a:Numeric{return serialize(a)} 
+/ a: Identifier{ return serialize(a) }
 
 
 MoreOrLess
 = OPERATOR_ARITHMETIC_PLUS
 / OPERATOR_ARITHMETIC_LESS
 
-SomeOperators
+SomeOperators 
 = OPERATOR_ARITHMETIC_MULTIPLICATION
 / OPERATOR_ARITHMETIC_DIVISION
 / OPERATOR_ARITHMETIC_MOD
@@ -215,28 +413,52 @@ Numeric
 
 
 ExpressionEquationStatement
-	= ArithmeticOperators Equation
+= ArithmeticOperators Equation
 // *************************************
 
 // DEFINITION OF EXPRESSIONS
 
 ExpressionStatement
-= DELIMITER_BLOCK_LEFT_PARENTHESES (ExpressionUnit LogicalOperators)* ExpressionUnit ExpressionEquationStatement* DELIMITER_BLOCK_RIGHT_PARENTHESES
-/ (ExpressionUnit LogicalOperators)* ExpressionUnit
+= DELIMITER_BLOCK_LEFT_PARENTHESES a:((ExpressionUnit LogicalOperators)* ExpressionUnit ExpressionEquationStatement*) DELIMITER_BLOCK_RIGHT_PARENTHESES
+{return {type:'ExpressionStatement',body:makeLinearize(a)}}
+/ a:((ExpressionUnit LogicalOperators)* ExpressionUnit)
+{return {type:'ExpressionStatement',body:makeLinearize(a)}}
+
 
 LogicalOperators
 = OPERATOR_LOGICAL_AND
 / OPERATOR_LOGICAL_OR
 
 ExpressionUnit
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES) { return a.join(' ') }
+=  DELIMITER_BLOCK_LEFT_PARENTHESES a:(AssignmentExpression) DELIMITER_BLOCK_RIGHT_PARENTHESES
+{return {type:'ExpressionUnit',body:makeLinearize(a)}}
+/ a:AssignmentExpression
+{return {type:'ExpressionUnit',body:makeLinearize(a)}}
+/ a: OPERATOR_NEGATION (DELIMITER_BLOCK_LEFT_PARENTHESES AssignmentExpression DELIMITER_BLOCK_RIGHT_PARENTHESES)
+{return {type:'ExpressionUnit',body:makeLinearize(a)}}
+/ a:OPERATOR_NEGATION AssignmentExpression
+{return {type:'ExpressionUnit',body:makeLinearize(a)}}
 
-AssignmentExpression
-= a: (IDENTIFIER_VARIABLES ComparisonOperators IDENTIFIER_VARIABLES) { return a.join(' ') }
-/ a:(IDENTIFIER_VARIABLES ComparisonOperators InstanceType){return a.join(' ')}
-/ a: (InstanceType ComparisonOperators InstanceType) { return a.join(' ') }
-/ a: (InstanceType VariableAtribuition) { return a.join(' ') }
-/ a: (IDENTIFIER_VARIABLES VariableAtribuition) { return a.join(' ') }
+
+AssignmentExpression 
+= a: (Identifier ComparisonOperators Identifier) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a:(Identifier ComparisonOperators InstanceType)
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (InstanceType ComparisonOperators InstanceType) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (Identifier LogicalOperators Identifier) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a:(Identifier LogicalOperators InstanceType)
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (InstanceType LogicalOperators InstanceType) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (InstanceType VariableAtribuition) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (Identifier VariableAtribuition) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a: (Identifier) 
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
 
 
 ComparisonOperators
@@ -246,6 +468,7 @@ ComparisonOperators
 / OPERATOR_COMPARISON_LESS_THEN
 / OPERATOR_COMPARISON_MORE_EQUAL
 / OPERATOR_COMPARISON_MORE_THEN
+/ OPERATOR_NEGATION OPERATOR_ATRIBUTION_EQUAL 
 / LogicalOperators
 
 // *****************************************
@@ -264,18 +487,19 @@ Type "Type"
 / TYPE_CHAR
 / TYPE_VOID
 
-InstanceType "InstanceType"
+
+InstanceType 
 = INSTANCE_OF_BOOL
 / INSTANCE_OF_CHAR_MULTPLE
 / INSTANCE_OF_CHAR_SIMPLE
 / INSTANCE_OF_FLOAT
-/ INSTANCE_OF_INT
+/ INSTANCE_OF_INT 
 
-
-Identifier "Identifier"
+Identifier
 = c: (IDENTIFIER_VARIABLES) { return c }
 / a:(IDENTIFIER_POINTER_ADDRESS) {return a} 
-/ b: (IDENTIFIER_POINTER_VARIABLE) { return b }
+/ b: (OPERATOR_UNARY_E* OPERATOR_ARITHMETIC_MULTIPLICATION* IDENTIFIER_POINTER_VARIABLE) { return {type:"IDENTIFIER_POINTER_VARIABLE", body:clearArray(b)} }
+
 
 _ "Optional Whitespace"
 = w: [\t\n\r] * { return[w.join('')] }
@@ -288,65 +512,77 @@ _LB = _
   LineBreak 
 = '\n'
 
-INSTANCE_OF_INT = 'INSTANCE_OF_INT' { return 'Inteiro' }
-INSTANCE_OF_FLOAT = 'INSTANCE_OF_FLOAT' { return 'Decimal' }
-INSTANCE_OF_BOOL = 'INSTANCE_OF_BOOL' { return 'Boleano' }
-INSTANCE_OF_CHAR_SIMPLE = 'INSTANCE_OF_CHAR_SIMPLE' { return 'Character' }
-INSTANCE_OF_CHAR_MULTPLE = 'INSTANCE_OF_CHAR_MULTPLE' { return 'String' }
+ValueInput  
+	= v:("{" +'"' Value* '"'+ "|" Line "|" Column "}"){return [v[2].join(''),v[5].join(''),v[7].join('')]};
 
-TYPE_INT = 'TYPE_INT'{ return 'int' }
-TYPE_BOOL = 'TYPE_BOOL' { return 'bool' }
-TYPE_FLOAT = 'TYPE_FLOAT' { return 'float' }
-TYPE_CHAR = 'TYPE_CHAR' { return 'char' }
-TYPE_VOID = 'TYPE_VOID' { return 'void' }
+Value "va"  
+= a:(!("\"") .){return a[1]}  
 
-COMMAND_IF = 'COMMAND_IF'{ return 'if' }
-COMMAND_FOR = 'COMMAND_FOR' { return 'for' }
-COMMAND_WHILE = 'COMMAND_WHILE' { return 'while' }
-COMMAND_DO = 'COMMAND_DO' { return 'do' }
-COMMAND_BREAK = 'COMMAND_BREAK' { return 'break' }
-COMMAND_CONTINUE = 'COMMAND_CONTINUE' { return 'continue' }
-COMMAND_SCANF = 'COMMAND_SCANF'{ return 'scanf' }
-COMMAND_PRINTF = 'COMMAND_PRINTF' { return 'print' }
-COMMAND_INCLUDE = 'COMMAND_INCLUDE' { return 'include' }
-COMMAND_RETURN = 'COMMAND_RETURN' { return 'return' }
-COMMAND_ELSE = 'COMMAND_ELSE' { return 'else' }
+ 
 
-IDENTIFIER_MAIN = 'IDENTIFIER_MAIN' { return 'main' }
-IDENTIFIER_VARIABLES = 'IDENTIFIER_VARIABLES' { return 'x' }
-IDENTIFIER_POINTER_VARIABLE = 'IDENTIFIER_POINTER_VARIABLE' { return '*ptr' }
-IDENTIFIER_POINTER_ADDRESS = 'IDENTIFIER_POINTER_ADDRESS'{ return '&end' }
+Line = [0-9]*
 
-OPERATOR_ARITHMETIC_PLUS = 'OPERATOR_ARITHMETIC_PLUS'{ return '+' }
-OPERATOR_ARITHMETIC_LESS = 'OPERATOR_ARITHMETIC_LESS'{ return '-' }
-OPERATOR_ARITHMETIC_MULTIPLICATION = 'OPERATOR_ARITHMETIC_MULTIPLICATION' { return '*' }
-OPERATOR_ARITHMETIC_DIVISION = 'OPERATOR_ARITHMETIC_DIVISION' { return '/' }
-OPERATOR_ARITHMETIC_DIV = 'OPERATOR_ARITHMETIC_DIV'
-OPERATOR_ARITHMETIC_MOD = 'OPERATOR_ARITHMETIC_MOD'
-OPERATOR_COMPARISON_LESS_THEN = 'OPERATOR_COMPARISON_LESS_THEN' { return '<' }
-OPERATOR_COMPARISON_MORE_THEN = 'OPERATOR_COMPARISON_MORE_THEN' { return '>' }
-OPERATOR_COMPARISON_LESS_EQUAL = 'OPERATOR_COMPARISON_LESS_EQUAL' { return '<=' }
-OPERATOR_COMPARISON_MORE_EQUAL = 'OPERATOR_COMPARISON_MORE_EQUAL' { return '>=' }
-OPERATOR_COMPARISON_DIFFERENT = 'OPERATOR_COMPARISON_DIFFERENT' { return '!=' }
-OPERATOR_COMPARISON_EQUAL = 'OPERATOR_COMPARISON_EQUAL'{ return '==' }
-OPERATOR_ATRIBUTION_EQUAL = 'OPERATOR_ATRIBUTION_EQUAL'{ return '=' }
-OPERATOR_NEGATION = 'OPERATOR_NEGATION' { return '!' }
-OPERATOR_LOGICAL_AND = 'OPERATOR_LOGICAL_AND' { return '&&' }
-OPERATOR_LOGICAL_OR = 'OPERATOR_LOGICAL_OR' { return '||' }
-OPERATOR_UNARY_PIPE = 'OPERATOR_UNARY_PIPE' { return '|' }
-OPERATOR_UNARY_E = 'OPERATOR_UNARY_E' { return '&' }
+Column = [0-9]*
 
-DELIMITER_BLOCK_LEFT_BRACKET = 'DELIMITER_BLOCK_LEFT_BRACKET'
-DELIMITER_BLOCK_LEFT_BRACE = 'DELIMITER_BLOCK_LEFT_BRACE' { return 'LC' }
-DELIMITER_BLOCK_LEFT_PARENTHESES = 'DELIMITER_BLOCK_LEFT_PARENTHESES' { return '(' }
-DELIMITER_BLOCK_RIGHT_BRACKET = 'DELIMITER_BLOCK_RIGHT_BRACKET'
-DELIMITER_BLOCK_RIGHT_BRACE = 'DELIMITER_BLOCK_RIGHT_BRACE' { return '\nRC' }
-DELIMITER_BLOCK_RIGHT_PARENTHESES = 'DELIMITER_BLOCK_RIGHT_PARENTHESES' { return ')' }
-DELIMITER_END_LINE = 'DELIMITER_END_LINE'
-DELIMITER_HASHTAG = 'DELIMITER_HASHTAG'
-DELIMITER_COMMA = 'DELIMITER_COMMA'{ return ',' }
-DELIMITER_DOT = 'DELIMITER_DOT'
-DELIMITER_DOT_COMMA = 'DELIMITER_DOT_COMMA' { return ';' }
+INSTANCE_OF_INT = 'INSTANCE_OF_INT'  v:ValueInput { return {type:'INSTANCE_OF_INT',value:parseValueInput(v)} }
+INSTANCE_OF_FLOAT = 'INSTANCE_OF_FLOAT'  v:ValueInput { return {type:'INSTANCE_OF_FLOAT',value:parseValueInput(v)} }
+INSTANCE_OF_BOOL = 'INSTANCE_OF_BOOL'  v:ValueInput { return {type:'INSTANCE_OF_BOOL',value:parseValueInput(v)} }
+INSTANCE_OF_CHAR_SIMPLE = 'INSTANCE_OF_CHAR_SIMPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_SIMPLE',value:parseValueInput(v)} }
+INSTANCE_OF_CHAR_MULTPLE = 'INSTANCE_OF_CHAR_MULTPLE'  v:ValueInput { return {type:'INSTANCE_OF_CHAR_MULTPLE',value:parseValueInput(v)} }
+
+TYPE_INT = 'TYPE_INT'   { return {type:'TYPE_INT'} }
+TYPE_BOOL = 'TYPE_BOOL'   { return {type:'TYPE_BOOL'} }
+TYPE_FLOAT = 'TYPE_FLOAT'  { return {type:'TYPE_FLOAT'} }
+TYPE_CHAR = 'TYPE_CHAR' { return {type:'TYPE_CHAR'} }
+TYPE_VOID = 'TYPE_VOID'   { return {type:'TYPE_VOID'} }
+
+COMMAND_IF = 'COMMAND_IF'{ return {type:'COMMAND_IF'} }
+COMMAND_FOR = 'COMMAND_FOR' { return {type:'COMMAND_FOR'} }
+COMMAND_WHILE = 'COMMAND_WHILE'  { return {type:'COMMAND_WHILE'} }
+COMMAND_DO = 'COMMAND_DO'  { return {type:'COMMAND_DO'} }
+COMMAND_BREAK = 'COMMAND_BREAK'  { return {type:'COMMAND_BREAK'} }
+COMMAND_CONTINUE = 'COMMAND_CONTINUE'  { return {type:'COMMAND_CONTINUE'} }
+COMMAND_SCANF = 'COMMAND_SCANF'  { return {type:'COMMAND_SCANF'} }
+COMMAND_PRINTF = 'COMMAND_PRINTF'  { return {type:'COMMAND_PRINTF'} }
+COMMAND_INCLUDE = 'COMMAND_INCLUDE'  { return {type:'COMMAND_INCLUDE'} }
+COMMAND_RETURN = 'COMMAND_RETURN' { return {type:'COMMAND_RETURN'} }
+COMMAND_ELSE = 'COMMAND_ELSE' { return {type:'COMMAND_ELSE'} }
+
+IDENTIFIER_MAIN = 'IDENTIFIER_MAIN' { return {type:'IDENTIFIER_MAIN' }}
+IDENTIFIER_VARIABLES = 'IDENTIFIER_VARIABLES' v:ValueInput { return {type:'IDENTIFIER_VARIABLES',value:parseValueInput(v)} }
+IDENTIFIER_POINTER_VARIABLE = 'IDENTIFIER_POINTER_VARIABLE' v:ValueInput { return {type:'IDENTIFIER_POINTER_VARIABLE',value:parseValueInput(v)} }
+IDENTIFIER_POINTER_ADDRESS = 'IDENTIFIER_POINTER_ADDRESS'v:ValueInput { return {type:'IDENTIFIER_POINTER_ADDRESS',value:parseValueInput(v)} }
+
+OPERATOR_ARITHMETIC_PLUS = 'OPERATOR_ARITHMETIC_PLUS'{ return {type:"OPERATOR_ARITHMETIC_PLUS"} }
+OPERATOR_ARITHMETIC_LESS = 'OPERATOR_ARITHMETIC_LESS'{ return {type:"OPERATOR_ARITHMETIC_LESS"} }
+OPERATOR_ARITHMETIC_MULTIPLICATION = 'OPERATOR_ARITHMETIC_MULTIPLICATION' { return {type:"OPERATOR_ARITHMETIC_MULTIPLICATION"} }
+OPERATOR_ARITHMETIC_DIVISION = 'OPERATOR_ARITHMETIC_DIVISION' { return {type:"OPERATOR_ARITHMETIC_DIVISION"} }
+OPERATOR_ARITHMETIC_DIV = 'OPERATOR_ARITHMETIC_DIV' { return {type:"OPERATOR_ARITHMETIC_DIV"} }
+OPERATOR_ARITHMETIC_MOD = 'OPERATOR_ARITHMETIC_MOD' { return {type:"OPERATOR_ARITHMETIC_MOD"} }
+OPERATOR_COMPARISON_LESS_THEN = 'OPERATOR_COMPARISON_LESS_THEN' { return {type:"OPERATOR_COMPARISON_LESS_THEN"} }
+OPERATOR_COMPARISON_MORE_THEN = 'OPERATOR_COMPARISON_MORE_THEN' { return {type:"OPERATOR_COMPARISON_MORE_THEN"} }
+OPERATOR_COMPARISON_LESS_EQUAL = 'OPERATOR_COMPARISON_LESS_EQUAL' { return {type:"OPERATOR_COMPARISON_LESS_EQUAL"} }
+OPERATOR_COMPARISON_MORE_EQUAL = 'OPERATOR_COMPARISON_MORE_EQUAL' { return {type:"OPERATOR_COMPARISON_MORE_EQUAL"} }
+OPERATOR_COMPARISON_DIFFERENT = 'OPERATOR_COMPARISON_DIFFERENT' { return {type:"OPERATOR_COMPARISON_DIFFERENT"} }
+OPERATOR_COMPARISON_EQUAL = 'OPERATOR_COMPARISON_EQUAL' { return {type:"OPERATOR_COMPARISON_EQUAL"} }
+OPERATOR_ATRIBUTION_EQUAL = 'OPERATOR_ATRIBUTION_EQUAL' { return {type:"OPERATOR_ATRIBUTION_EQUAL"} }
+OPERATOR_NEGATION = 'OPERATOR_NEGATION' { return {type:"OPERATOR_NEGATION"} }
+OPERATOR_LOGICAL_AND = 'OPERATOR_LOGICAL_AND' { return {type:"OPERATOR_LOGICAL_AND"} }
+OPERATOR_LOGICAL_OR = 'OPERATOR_LOGICAL_OR' { return {type:"OPERATOR_LOGICAL_OR"} }
+OPERATOR_UNARY_PIPE = 'OPERATOR_UNARY_PIPE' { return {type:"OPERATOR_UNARY_PIPE"} }
+OPERATOR_UNARY_E = 'OPERATOR_UNARY_E' { return {type:"OPERATOR_UNARY_E"} }
+
+DELIMITER_BLOCK_LEFT_BRACKET = 'DELIMITER_BLOCK_LEFT_BRACKET' { return {type:"DELIMITER_BLOCK_LEFT_BRACKET"} }
+DELIMITER_BLOCK_LEFT_BRACE = 'DELIMITER_BLOCK_LEFT_BRACE' { return {type:"DELIMITER_BLOCK_LEFT_BRACE"} }
+DELIMITER_BLOCK_LEFT_PARENTHESES = 'DELIMITER_BLOCK_LEFT_PARENTHESES' { return {type:"DELIMITER_BLOCK_LEFT_PARENTHESES"} }
+DELIMITER_BLOCK_RIGHT_BRACKET = 'DELIMITER_BLOCK_RIGHT_BRACKET' { return {type:"DELIMITER_BLOCK_RIGHT_BRACKET"} }
+DELIMITER_BLOCK_RIGHT_BRACE = 'DELIMITER_BLOCK_RIGHT_BRACE' { return {type:"DELIMITER_BLOCK_RIGHT_BRACE"} }
+DELIMITER_BLOCK_RIGHT_PARENTHESES = 'DELIMITER_BLOCK_RIGHT_PARENTHESES' { return {type:"DELIMITER_BLOCK_RIGHT_PARENTHESES"} }
+DELIMITER_END_LINE = 'DELIMITER_END_LINE' { return {type:"DELIMITER_END_LINE"} }
+DELIMITER_HASHTAG = 'DELIMITER_HASHTAG'{ return {type:"DELIMITER_HASHTAG"} }
+DELIMITER_COMMA = 'DELIMITER_COMMA'{ return {type:"DELIMITER_COMMA"} }
+DELIMITER_DOT = 'DELIMITER_DOT' { return {type:"DELIMITER_DOT"} }
+DELIMITER_DOT_COMMA = 'DELIMITER_DOT_COMMA' { return {type:"DELIMITER_DOT_COMMA"} }
 
 COMMENT_SIMPLE = 'COMMENT_SIMPLE'
 COMMENT_MULTIPLE = 'COMMENT_MULTIPLE'

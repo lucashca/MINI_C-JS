@@ -1,6 +1,11 @@
 int main(){ //função principal
-    printf("Ola mundo\n"); //exibe na tela a mensagem
-
-    system("PAUSE"); //parar a tela de console
-    return(0);//retorna um resultado
+    int a[10][10],b,c;
+    if(a||b){
+       int b;
+       if((b ==1)||(c==0)||(c==11)){
+          int c = 0;
+          int d = 12 + 24*124;
+       }
+    }
+    
 }//fim do programa

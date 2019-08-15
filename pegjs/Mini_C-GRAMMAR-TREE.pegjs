@@ -65,10 +65,7 @@
     }
     
     function parseValueInput(str){
-    	    console.log(str);
-    
     	
-      
         
         return {value:str[0],line:str[1],column:str[2]}
         
@@ -86,9 +83,9 @@ Programinit
 = InitialRule
 
 InitialRule
-= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return main2 }
-/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main} 
-/ main:(IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return main} 
+= main2: (Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE DELIMITER_BLOCK_RIGHT_BRACE) { return {type:'main',body:'empty'} }
+/ main:(Type IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return {type:'main',body:main[5]} }
+/ main:(IDENTIFIER_MAIN DELIMITER_BLOCK_LEFT_PARENTHESES DELIMITER_BLOCK_RIGHT_PARENTHESES DELIMITER_BLOCK_LEFT_BRACE Program DELIMITER_BLOCK_RIGHT_BRACE){return {type:'main',body:main[4]} }
 
 Program
 = (SourceElement) *
@@ -257,32 +254,33 @@ VariableDaclarationList
 = vardec:(OPERATOR_ATRIBUTION_EQUAL) vardec2:(ExpressionStatement)
 
 VariableStatementList
-= varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) 
-{ return {type:"VariableStatementList",body:clearArray(varDec2)}}
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier VariableStatementArray) 
-{ return {type:"VariableStatementList",body:clearArray(varDec)}}
-/ varDec2: (VariableStatementAtribuition * VariableStatementSimple * Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType)
-{ return {type:"VariableStatementList",body:clearArray(varDec2)}}
-/ varDec:(VariableStatementAtribuition * VariableStatementSimple * Identifier)
-{ return {type:"VariableStatementLists",body:clearArray(varDec)}}
+= varDec2: (VariableStatementAtribuition* VariableStatementSimple*) tail:(Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType) 
+{ return {type:"VariableStatementList",body:varDec2, tail:{type:'VariableStatementAtribuitionArraySimple',body:tail}}}
+/ varDec:(VariableStatementAtribuition * VariableStatementSimple *) tail:(Identifier VariableStatementArray) 
+{ return {type:"VariableStatementList",body:varDec, tail:{type:'VariableStatementArray',body:tail}}}
+/ varDec2: (VariableStatementAtribuition * VariableStatementSimple*) tail:( Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType)
+{ return {type:"VariableStatementList",body:varDec2,tail:{type:'VariableStatementAtribuitionSimple',body:tail}}}
+/ varDec:(VariableStatementAtribuition* VariableStatementSimple*) tail:(Identifier)
+{ return {type:"VariableStatementList",body:varDec, tail:{type:'VariableStatementSimple',body:tail}}}
 
 VariableStatementAtribuition 
 = a: (Identifier VariableStatementArray OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) 
 { return {type:"VariableStatementAtribuition",body:a}}
+/ a: (Identifier VariableAtribuition)( DELIMITER_COMMA){ return {type:"VariableStatementAtribuition",body:a}}
+/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType)( DELIMITER_COMMA) { return {type:"VariableStatementAtribuition",body:a}}
 
-/ a: (Identifier VariableAtribuition DELIMITER_COMMA){ return {type:"VariableStatementAtribuition",body:a}}
-/ a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType DELIMITER_COMMA) { return {type:"VariableStatementAtribuition",body:a}}
+
 
 VariableStatementSimple
-= a: (Identifier DELIMITER_COMMA) { return (a.join('')) }
-/ a:(Identifier VariableStatementArray DELIMITER_COMMA)
+= a: (Identifier) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
+/ a:(Identifier VariableStatementArray) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
 
 VariableStatementArray
-= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)
+= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)  { return {type:'VariableStatementArray',body:a}}
 
 
 VariableAtribuition
-= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
+= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes){return a}
 /a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
 
 
