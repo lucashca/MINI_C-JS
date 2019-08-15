@@ -51,6 +51,9 @@ function ExpressionStatement(statement) {
     let body = statement.body;
     if (body instanceof Array) {
         for (let state of statement.body) {
+           
+            console.log(JSON.stringify(state,null,2));
+   
             VerifyStatement(state);
         }
     } else {
@@ -136,12 +139,10 @@ function VariableStatement(statement) {
     let typeOfVar = statement.body[0].type;
     let body = statement.body[1];
 
-
     if (body.type == ENUM_LIST.STATEMENTS_ENUM.VARIABLE_LIST) {
         VariableStatementList(body, typeOfVar);
     } else {
         body = statement.body[0];
-
         VariableStatementList(body, null);
 
 
@@ -170,8 +171,6 @@ function VariableStatement(statement) {
 function getType(identifier) {
       
     for (let i = 1; i <= scopeLabel.length ; i ++) {
-        console.log(scopeLabel);
-        console.log(scopeLabel[scopeLabel.length - i]);
         for (let r of simbolicTable) {
             if (r.identifier == identifier && r.scope == scopeLabel[scopeLabel.length - i]) {
                 return r.type;
