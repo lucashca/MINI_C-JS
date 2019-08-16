@@ -241,14 +241,18 @@ ForExpressionTerm
 {return {type:'ForExpressionTerms',fistTerm:f ,secondTerm:s, thirdTerm:t }}
 
 ForFistTerm
-= Type Identifier VariableAtribuition DELIMITER_DOT_COMMA
+= a:(Type Identifier VariableAtribuition) DELIMITER_DOT_COMMA
+{return {type:'IdentifierAtribution',body:makeLinearize(a)}}
 
 ForSecondTerm
-= Identifier ComparisonOperators Identifier DELIMITER_DOT_COMMA
-  / Identifier ComparisonOperators InstanceType DELIMITER_DOT_COMMA
+= a:(Identifier ComparisonOperators Identifier) DELIMITER_DOT_COMMA
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
+/ a:(Identifier ComparisonOperators InstanceType) DELIMITER_DOT_COMMA
+{return {type:'AssignmentExpression',body:makeLinearize(a)}}
 
 ForThirdTerm
-= Identifier VariableAtribuition
+= a:(IDENTIFIER_VARIABLES OPERATOR_ATRIBUTION_EQUAL Equation)
+{return {type:'IdentifierAtribution',body:makeLinearize(a)}}
 
 // ***********************************************************
 
@@ -308,7 +312,7 @@ ScanfArgumentList
 
 
 
-VariableStatement
+VariableStatement 
 = varDec: (Type VariableStatementList EOL) { return {type:"VariableStatement", body:makeLinearize(varDec)}}
 / varAss:(VariableStatementList EOL){ return {type:"VariableStatement", body:makeLinearize(varAss)}}
 / varDec:(Type Identifier VariableDaclarationList EOL) { return {type:"VariableStatement", body:makeLinearize(varDec)}}
@@ -316,25 +320,30 @@ VariableStatement
 VariableDaclarationList 
 = vardec:(OPERATOR_ATRIBUTION_EQUAL) vardec2:(ExpressionStatement)
 
-VariableStatementList
+VariableStatementList 
 = varDec2: (VariableStatementTypes*) tail:(Identifier VariableStatementArray VariableAtribuition) 
 { return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementArrayAtribuition',body:makeLinearize(tail)}}}
 / varDec2: (VariableStatementTypes*) tail:(Identifier VariableStatementArray+) 
 { return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementArray',body:makeLinearize(tail)}}}
 / varDec2: (VariableStatementTypes*) tail:( Identifier VariableAtribuition) 
-{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementAtribuition',body:makeLinearize(tail)}}}
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'IdentifierAtribution',body:makeLinearize(tail)}}}
 / varDec2: (VariableStatementTypes*) tail:(Identifier) 
-{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'VariableStatementSimple',body:makeLinearize(tail)}}}
+{ return {type:"VariableStatementList",body:makeLinearize(varDec2), tail:{type:'OnlyIdentifier',body:makeLinearize(tail)}}}
 
-VariableStatementLast
-= Identifier VariableStatementArray VariableAtribuition
-/ Identifier VariableStatementArray+
-/ Identifier VariableAtribuition
-/ Identifier VariableDaclarationList
-/ Identifier 
+VariableAtribuition 
+= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
+/a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
+/a:(OPERATOR_ATRIBUTION_EQUAL Equation)
 
 
-VariableStatementTypes
+VariableAtribuitionTypes
+= Equation
+/ ExpressionStatement
+/ AssignmentExpression
+/ InstanceType
+/Identifier
+
+VariableStatementTypes 
 = VariableStatementAtribuition
 / VariableStatementSimple
 
@@ -346,31 +355,18 @@ VariableStatementAtribuition
 { return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
 / a: (Identifier OPERATOR_ATRIBUTION_EQUAL InstanceType) DELIMITER_COMMA 
 { return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
-/ a: (Identifier VariableStatementArray+) DELIMITER_COMMA 
-{ return {type:"VariableStatementAtribuition",body:makeLinearize(a)}}
 
 
 
 VariableStatementSimple
-= a: (Identifier) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
-/ a:(Identifier VariableStatementArray) (DELIMITER_COMMA) { return {type:'VariableStatementSimple',body:a}}
+= a: (Identifier) (DELIMITER_COMMA) { return {type:'OnlyIdentifier',body:makeLinearize(a)}}
+/ a:(Identifier VariableStatementArray+) (DELIMITER_COMMA) { return {type:'VariableStatementArray',body:makeLinearize(a)}}
 
 VariableStatementArray
-= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)  { return {type:'VariableStatementArray',body:a}}
-
-
-VariableAtribuition 
-= a: (OPERATOR_ATRIBUTION_EQUAL VariableAtribuitionTypes)
-/a: (OPERATOR_ATRIBUTION_EQUAL OPERATOR_UNARY_E VariableAtribuitionTypes)
+= a: (DELIMITER_BLOCK_LEFT_BRACKET INSTANCE_OF_INT DELIMITER_BLOCK_RIGHT_BRACKET)  { return {type:'Array',body:makeLinearize(a)}}
 
 
 
-VariableAtribuitionTypes
-= ExpressionStatement
-/ AssignmentExpression
-/ Equation
-/ InstanceType
-/ Identifier
 //***************************************************************
 
 // SOME EQUATION OPERATIONS    
@@ -380,13 +376,14 @@ VariableAtribuitionTypes
 Equation 
 = a: (Term (MoreOrLess Term)*){ return {type:'Equation',body:makeLinearize(serialize(a))} }
 
+
 Term
-= a: (Factor (SomeOperators Factor)*){ return serialize(a) }
+= a: (Factor (SomeOperators Factor)*){ return makeLinearize(a) }
 
 Factor
-= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return serialize(a) }
-/ a:Numeric{return serialize(a)} 
-/ a: Identifier{ return serialize(a) }
+= a: (DELIMITER_BLOCK_LEFT_PARENTHESES Equation DELIMITER_BLOCK_RIGHT_PARENTHESES) { return makeLinearize(a) }
+/ a:Numeric{return makeLinearize(a)} 
+/ a: Identifier{ return makeLinearize(a) }
 
 
 MoreOrLess
@@ -496,10 +493,10 @@ InstanceType
 / INSTANCE_OF_FLOAT
 / INSTANCE_OF_INT 
 
-Identifier
+Identifier 
 = c: (IDENTIFIER_VARIABLES) { return c }
 / a:(IDENTIFIER_POINTER_ADDRESS) {return a} 
-/ b: (OPERATOR_UNARY_E* OPERATOR_ARITHMETIC_MULTIPLICATION* IDENTIFIER_POINTER_VARIABLE) { return {type:"IDENTIFIER_POINTER_VARIABLE", body:clearArray(b)} }
+/ b: (OPERATOR_UNARY_E* OPERATOR_ARITHMETIC_MULTIPLICATION* IDENTIFIER_POINTER_VARIABLE) { return {type:"Pointer", body:makeLinearize(b)} }
 
 
 _ "Optional Whitespace"

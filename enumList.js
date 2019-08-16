@@ -78,9 +78,16 @@ const STATEMENTS_ENUM = {
     VARIABLE_LIST:'VariableStatementList',
     DO_WHILE: 'DoWhileStatement',
     IF: 'IfStatement',
+    FOR:'ForStatement',
+    WHILE:'WhileStatement',
     EQUATION:'Equation',
-    EXPRESSION_UNIT:'ExpressionUnit'
-    
+    EXPRESSION:'ExpressionStatement',
+    EXPRESSION_UNIT:'ExpressionUnit',
+    POINTER_STATEMENT:'Pointer',
+    IDENTIFIER_ATRIBUTION:'IdentifierAtribution',
+    VARIABLE_IDENTIFIER:'OnlyIdentifier',
+    ASSIGMENT_EXPRESSION:'AssignmentExpression'
+
     
 }
 
